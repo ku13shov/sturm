@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://siqmngn8nhfx"]
+
+[ext_resource type="Script" uid="uid://b1qxhcvo1u0sb" path="res://basic_bug_walker.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bb84uiaa6rbw0" path="res://assets/models/units/basic-bug.glb" id="2_bug"]
+
+[sub_resource type="Environment" id="Environment_world"]
+background_mode = 1
+background_color = Color(0.035, 0.055, 0.09, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.35, 0.42, 0.58, 1)
+ambient_light_energy = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_ground"]
+albedo_color = Color(0.12, 0.19, 0.14, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(11, 0.2, 11)
+
+[sub_resource type="BoxShape3D" id="BoxShape_ground"]
+size = Vector3(11, 0.2, 11)
+
+[sub_resource type="BoxShape3D" id="BoxShape_bug"]
+size = Vector3(0.9472168, 0.47177735, 0.85041505)
+
+[node name="BasicBugDemo" type="Node3D" unique_id=386368844]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=263478626]
+environment = SubResource("Environment_world")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=1873726076]
+transform = Transform3D(0.90630776, 0.34618863, -0.24240388, 0, 0.57357645, 0.81915206, 0.42261827, -0.74240386, 0.5198368, 0, 0, 0)
+light_color = Color(0.85, 0.9, 1, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1595571367]
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=2841449]
+material_override = SubResource("Material_ground")
+mesh = SubResource("BoxMesh_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=289500207]
+shape = SubResource("BoxShape_ground")
+
+[node name="Bug" type="CharacterBody3D" parent="." unique_id=297304415]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+collision_layer = 2
+script = ExtResource("1_script")
+
+[node name="BugModel" parent="Bug" unique_id=1694352767 instance=ExtResource("2_bug")]
+transform = Transform3D(1, 0, 0, 0, 0.9985253, -0.054287944, 0, 0.054287944, 0.9985253, 0.055960417, -0.15385419, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bug" unique_id=2030776580]
+transform = Transform3D(1, 0, 0, 0, 0.9999992, 0.0012391835, 0, -0.0012391835, 0.9999992, 0.05217287, -0.16411132, 0.007165581)
+shape = SubResource("BoxShape_bug")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1292448799]
+transform = Transform3D(1, 0, 0, 0, 0.7880108, 0.6156615, 0, -0.6156615, 0.7880108, 0, 8.5, 9.5)
+current = true
+
+[node name="Title" type="Label" parent="." unique_id=1740971985]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 500.0
+offset_bottom = 65.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "basic-bug — autonomous walk"
+
+[node name="Hint" type="Label" parent="." unique_id=1065266538]
+offset_left = 26.0
+offset_top = 58.0
+offset_right = 560.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
+theme_override_font_sizes/font_size = 16
+text = "GLB animation: walk  •  движется по арене"
