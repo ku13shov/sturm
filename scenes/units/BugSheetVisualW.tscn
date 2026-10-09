@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://52onfjan3tit"]
+
+[ext_resource type="Script" uid="uid://8evu8w71yjdi" path="res://scripts/bug_sheet_visual_w.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://cj8pbvjiin3ww" path="res://shaders/bug_hit_flash.gdshader" id="2_hit"]
+[ext_resource type="Shader" uid="uid://bysu3sg0ivxbm" path="res://shaders/bug_contact_shadow.gdshader" id="3_shadow"]
+
+[sub_resource type="ShaderMaterial" id="ShadowMaterial"]
+shader = ExtResource("3_shadow")
+shader_parameter/shadow_color = Color(0.16, 0.045, 0.02, 1)
+shader_parameter/shadow_opacity = 0.35
+
+[sub_resource type="Gradient" id="ShadowGradient"]
+colors = PackedColorArray(0.03, 0.015, 0.01, 0.5, 0.03, 0.015, 0.01, 0)
+
+[sub_resource type="GradientTexture2D" id="ShadowTexture"]
+gradient = SubResource("ShadowGradient")
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="ShaderMaterial" id="HitMaterial"]
+shader = ExtResource("2_hit")
+shader_parameter/hit_flash = 0.0
+shader_parameter/flash_strength = 0.7
+shader_parameter/bottom_shade_strength = 0.2
+
+[sub_resource type="CanvasItemMaterial" id="GlowMaterial"]
+blend_mode = 1
+
+[node name="BugSheetVisualW" type="Node2D" unique_id=621303049]
+texture_filter = 4
+script = ExtResource("1_script")
+glow_base = 0.43
+
+[node name="ContactShadow" type="Sprite2D" parent="." unique_id=1546620351]
+z_index = -1
+material = SubResource("ShadowMaterial")
+texture = SubResource("ShadowTexture")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1783596221]
+material = SubResource("HitMaterial")
+
+[node name="GlowAnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=758668631]
+modulate = Color(1, 0.541176, 0.117647, 0.35)
+material = SubResource("GlowMaterial")

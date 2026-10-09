@@ -1,0 +1,49 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Texture2D" path="res://original/505.png" id="1_bug"]
+[ext_resource type="Script" path="res://scripts/basic_bug_2d.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="Atlas_idle_0"]
+atlas = ExtResource("1_bug")
+region = Rect2(0, 0, 12, 12)
+
+[sub_resource type="AtlasTexture" id="Atlas_idle_1"]
+atlas = ExtResource("1_bug")
+region = Rect2(0, 12, 12, 12)
+
+[sub_resource type="AtlasTexture" id="Atlas_idle_2"]
+atlas = ExtResource("1_bug")
+region = Rect2(0, 24, 12, 12)
+
+[sub_resource type="AtlasTexture" id="Atlas_idle_3"]
+atlas = ExtResource("1_bug")
+region = Rect2(0, 36, 12, 12)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bug"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_idle_0")}, {"duration": 1.0, "texture": SubResource("Atlas_idle_1")}, {"duration": 1.0, "texture": SubResource("Atlas_idle_2")}, {"duration": 1.0, "texture": SubResource("Atlas_idle_3")}],
+"loop": true,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="Capsule_bug"]
+radius = 4.0
+height = 10.0
+
+[node name="BasicBug2D" type="CharacterBody2D"]
+script = ExtResource("2_script")
+collision_layer = 2
+collision_mask = 0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_bug")
+animation = &"idle"
+autoplay = "idle"
+scale = Vector2(3, 3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Capsule_bug")
+
+[node name="AttackPoint" type="Marker2D" parent="."]
+position = Vector2(0, -18)

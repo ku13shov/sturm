@@ -1,0 +1,84 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://original/000.png" id="1_terrain"]
+
+[sub_resource type="AtlasTexture" id="Crop0"]
+atlas = ExtResource("1_terrain")
+region = Rect2(0, 0, 24, 24)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Crop1"]
+atlas = ExtResource("1_terrain")
+region = Rect2(7, 0, 24, 24)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Crop2"]
+atlas = ExtResource("1_terrain")
+region = Rect2(14, 0, 24, 24)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Crop3"]
+atlas = ExtResource("1_terrain")
+region = Rect2(21, 0, 24, 24)
+filter_clip = true
+
+[node name="TerrainCropSamplingPreview" type="Node2D"]
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.055, 0.065, 0.08, 1)
+mouse_filter = 2
+
+[node name="Heading" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 1128.0
+offset_bottom = 66.0
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 22
+text = "000.png • diagnostic crop sampling from original resource metadata"
+horizontal_alignment = 1
+
+[node name="Method" type="Label" parent="."]
+offset_left = 48.0
+offset_top = 88.0
+offset_right = 1104.0
+offset_bottom = 138.0
+theme_override_colors/font_color = Color(0.85, 0.9, 0.92, 1)
+text = "Original draw helper: 24×24 clipped window • source window origin steps by 7 px per frame index • adjacent examples overlap — NOT confirmed map-cell assignments"
+horizontal_alignment = 1
+
+[node name="Index0" type="Sprite2D" parent="."]
+position = Vector2(200, 330)
+texture_filter = 1
+texture = SubResource("Crop0")
+scale = Vector2(8, 8)
+
+[node name="Index1" type="Sprite2D" parent="."]
+position = Vector2(440, 330)
+texture_filter = 1
+texture = SubResource("Crop1")
+scale = Vector2(8, 8)
+
+[node name="Index2" type="Sprite2D" parent="."]
+position = Vector2(680, 330)
+texture_filter = 1
+texture = SubResource("Crop2")
+scale = Vector2(8, 8)
+
+[node name="Index3" type="Sprite2D" parent="."]
+position = Vector2(920, 330)
+texture_filter = 1
+texture = SubResource("Crop3")
+scale = Vector2(8, 8)
+
+[node name="IndexLabels" type="Label" parent="."]
+offset_left = 120.0
+offset_top = 482.0
+offset_right = 1032.0
+offset_bottom = 522.0
+theme_override_colors/font_color = Color(0.8, 0.84, 0.86, 1)
+theme_override_font_sizes/font_size = 18
+text = "frame 0: x=0     frame 1: x=7     frame 2: x=14     frame 3: x=21     (24×24 clipped source window)"
+horizontal_alignment = 1

@@ -1,0 +1,98 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/help_menu.gd" id="1_help"]
+
+[sub_resource type="StyleBoxFlat" id="PageStyle"]
+bg_color = Color(0.045, 0.06, 0.075, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.58, 0.34, 0.16, 1)
+
+[node name="HelpPages" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_help")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.025, 0.035, 0.045, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="Center"]
+custom_minimum_size = Vector2(620, 470)
+layout_mode = 2
+theme_override_styles/panel = SubResource("PageStyle")
+
+[node name="Heading" type="Label" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 14.0
+offset_right = 596.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(1, 0.84, 0.55, 1)
+theme_override_font_sizes/font_size = 24
+text = "СПРАВКА"
+horizontal_alignment = 1
+
+[node name="ChapterTitle" type="Label" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 56.0
+offset_right = 590.0
+offset_bottom = 92.0
+theme_override_colors/font_color = Color(0.91, 0.79, 0.58, 1)
+theme_override_font_sizes/font_size = 19
+
+[node name="PageText" type="RichTextLabel" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 96.0
+offset_right = 590.0
+offset_bottom = 386.0
+theme_override_colors/default_color = Color(0.88, 0.9, 0.88, 1)
+theme_override_font_sizes/normal_font_size = 16
+scroll_active = true
+fit_content = false
+
+[node name="PreviousButton" type="Button" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 406.0
+offset_right = 150.0
+offset_bottom = 448.0
+text = "◀ Назад"
+
+[node name="NextButton" type="Button" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 166.0
+offset_top = 406.0
+offset_right = 286.0
+offset_bottom = 448.0
+text = "Далее ▶"
+
+[node name="BackButton" type="Button" parent="Center/Panel"]
+layout_mode = 0
+offset_left = 414.0
+offset_top = 406.0
+offset_right = 590.0
+offset_bottom = 448.0
+text = "Назад в меню"

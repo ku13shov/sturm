@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="PaletteStyle"]
+bg_color = Color(0.07, 0.06, 0.045, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.82, 0.69, 0.52, 1)
+
+[node name="BuildPalettePopup" type="Control"]
+visible = false
+z_index = 1500
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Card" type="Panel" parent="."]
+layout_mode = 0
+position = Vector2(24, 240)
+size = Vector2(384, 336)
+theme_override_styles/panel = SubResource("PaletteStyle")
+
+[node name="Title" type="Label" parent="Card"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 360.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 20
+text = "ВЫБОР ПОСТРОЙКИ"
+
+[node name="BuildingPicker" type="OptionButton" parent="Card"]
+layout_mode = 0
+position = Vector2(16, 56)
+size = Vector2(352, 42)
+theme_override_font_sizes/font_size = 16
+item_count = 3
+popup/item_0/text = "Энергостанция"
+popup/item_0/id = 151
+popup/item_1/text = "Огневая башня"
+popup/item_1/id = 153
+popup/item_2/text = "Солдаты"
+popup/item_2/id = 163
+
+[node name="Details" type="Label" parent="Card"]
+layout_mode = 0
+position = Vector2(16, 106)
+size = Vector2(352, 58)
+theme_override_colors/font_color = Color(1, 0.9, 0.65, 1)
+theme_override_font_sizes/font_size = 18
+text = "ОЖ: 80   О: 5   А: 3   Р: 2\nРасходы: 500 $"
+
+[node name="ConfirmButton" type="Button" parent="Card"]
+layout_mode = 0
+position = Vector2(16, 176)
+size = Vector2(352, 44)
+theme_override_font_sizes/font_size = 17
+text = "ПОСТРОИТЬ"
+
+[node name="CancelButton" type="Button" parent="Card"]
+layout_mode = 0
+position = Vector2(16, 232)
+size = Vector2(352, 44)
+theme_override_font_sizes/font_size = 16
+text = "ОТМЕНА"
+
+[node name="Hint" type="Label" parent="Card"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 224.0
+offset_right = 360.0
+offset_bottom = 272.0
+theme_override_font_sizes/font_size = 13
+text = "Не подтверждённые цены и параметры отмечены как временные."
+autowrap_mode = 2

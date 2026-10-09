@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://cd601nxvbflij"]
+
+[ext_resource type="Script" uid="uid://cb0pfbf0q2b5d" path="res://scripts/ground_shadow.gd" id="1_shadow"]
+
+[node name="GroundShadow" type="Sprite2D" unique_id=2127222765]
+show_behind_parent = true
+z_index = -3
+texture_filter = 4
+offset = Vector2(4, 3)
+script = ExtResource("1_shadow")
+width_px = 135.0
+opacity = 0.45
+base_drop_px = 7.0

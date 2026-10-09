@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/graybox_tower.gd" id="1_tower"]
+[ext_resource type="Texture2D" path="res://original/103.png" id="2_base"]
+[ext_resource type="Texture2D" path="res://original/104.png" id="3_upper"]
+
+[node name="LaserTower" type="Node2D"]
+script = ExtResource("1_tower")
+building_id = 157
+max_health = 125.0
+upgrade_cost = 600
+attack_range = 180.0
+damage = 6.0
+damage_channel = "energy"
+fire_interval = 1.0
+temporary_balance_status = "SCREENSHOT_CONFIRMED_UI_TEMPORARY_COMBAT"
+
+[node name="BaseSprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_base")
+scale = Vector2(3, 3)
+z_index = 1
+
+[node name="TurretSprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("3_upper")
+hframes = 5
+frame = 0
+scale = Vector2(3, 3)
+z_index = 2
+
+[node name="RangeIndicator" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -180, 40, -160, 90, -120, 130, -70, 145, 0, 130, 70, 90, 120, 40, 160, 0, 180, -40, 160, -90, 120, -130, 70, -145, 0, -130, -70, -90, -120, -40, -160)
+color = Color(0.2, 0.75, 1, 0.08)
+show_behind_parent = true
+
+[node name="UpgradeAccent" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -24, 5, -19, 0, -14, -5, -19)
+color = Color(0.35, 0.9, 1, 0.95)
+visible = false
+z_index = 3
+
+[node name="ShotLine" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(0.3, 0.9, 1, 0.95)
+z_index = 3
+visible = false

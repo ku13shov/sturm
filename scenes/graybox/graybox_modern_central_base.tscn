@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://tej5ykqh52k"]
+
+[ext_resource type="Script" uid="uid://bkhlve7aunshn" path="res://scripts/graybox_base.gd" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://dgnnjxc3ushpc" path="res://assets/sprites/buildings/central_base_l1.webp" id="2_base_visual"]
+[ext_resource type="Texture2D" uid="uid://dvlpalh5lsrew" path="res://assets/sprites/buildings/central_base_l1_lights_overlay.png" id="3_lights"]
+
+[sub_resource type="StyleBoxFlat" id="BaseBar"]
+bg_color = Color(0.12, 0.8, 0.95, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uy02h"]
+radius = 121.0
+
+[node name="CentralBase" type="Node2D" unique_id=1016334383]
+script = ExtResource("1_base")
+
+[node name="ContactShadow" type="Polygon2D" parent="." unique_id=1878347628]
+scale = Vector2(1.25, 1.25)
+color = Color(0.01, 0.008, 0.006, 0.32)
+polygon = PackedVector2Array(-95.2, 33.6, -81.6, 47.199997, -51.199997, 67.99999, 2.3999999, 84.799995, 51.199997, 71.2, 83.99999, 45.6, 95.99999, 33.6, 68, 15, 34, 8, 0, 5, -34, 8, -68, 15)
+
+[node name="RetroSprite" type="Sprite2D" parent="." unique_id=803442762]
+z_index = 1
+texture_filter = 1
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("2_base_visual")
+
+[node name="LightsOverlay" type="Sprite2D" parent="." unique_id=1890622232]
+modulate = Color(1, 1, 1, 0.24)
+z_index = 2
+texture_filter = 1
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("3_lights")
+
+[node name="Body" type="Polygon2D" parent="." unique_id=52486446]
+visible = false
+scale = Vector2(1.25, 1.25)
+color = Color(0.12, 0.55, 0.68, 1)
+polygon = PackedVector2Array(-70, 18, -46, -58, 0, -78, 46, -58, 70, 18, 48, 70, -48, 70)
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=1092510149]
+visible = false
+offset_left = -42.0
+offset_top = -123.0
+offset_right = 42.0
+offset_bottom = -115.0
+theme_override_styles/fill = SubResource("BaseBar")
+max_value = 750.0
+value = 750.0
+show_percentage = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1975109733]
+shape = SubResource("CircleShape2D_uy02h")

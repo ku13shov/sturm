@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://original/000.png" id="1_terrain"]
+
+[node name="RetroTerrainAssetPreview" type="Node2D"]
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.055, 0.065, 0.08, 1)
+mouse_filter = 2
+
+[node name="TerrainSheet" type="Sprite2D" parent="."]
+position = Vector2(576, 324)
+texture_filter = 1
+texture = ExtResource("1_terrain")
+scale = Vector2(2.5, 2.5)
+
+[node name="Status" type="Label" parent="."]
+offset_left = 32.0
+offset_top = 24.0
+offset_right = 1120.0
+offset_bottom = 64.0
+text = "000.png • 168×168 px • original renderer: 24 px map spacing, resource #0 • 7×7 crop layout inferred; frame mapping still UNRESOLVED"
+horizontal_alignment = 1
+

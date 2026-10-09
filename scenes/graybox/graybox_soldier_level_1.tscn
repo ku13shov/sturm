@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/graybox_soldier.gd" id="1_soldier"]
+[ext_resource type="Texture2D" path="res://original/110.png" id="2_soldier_l1"]
+
+[node name="SoldierLevel1" type="Node2D"]
+script = ExtResource("1_soldier")
+soldier_level = 1
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_soldier_l1")
+hframes = 3
+vframes = 8
+frame = 0
+scale = Vector2(2, 2)

@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://c0r77fs4oqyoh"]
+
+[ext_resource type="PackedScene" uid="uid://civ20akgo0dij" path="res://scenes/graybox/graybox_bug.tscn" id="1_bug"]
+[ext_resource type="Script" path="res://scripts/graybox_bug_rig_preview.gd" id="2_preview"]
+
+[node name="BugRigPreview" type="Node2D" unique_id=1128788937]
+script = ExtResource("2_preview")
+
+[node name="GrayboxBug" parent="." unique_id=1026164129 instance=ExtResource("1_bug")]
+position = Vector2(216, 384)
+scale = Vector2(4, 4)

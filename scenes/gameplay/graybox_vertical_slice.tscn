@@ -1,0 +1,507 @@
+[gd_scene format=3 uid="uid://ce6pofg61tnn3"]
+
+[ext_resource type="Script" uid="uid://c7r0nhdx1bkwe" path="res://scripts/graybox_vertical_slice.gd" id="1_slice"]
+[ext_resource type="PackedScene" path="res://scenes/graybox/graybox_modern_central_base.tscn" id="2_base"]
+[ext_resource type="Script" uid="uid://dqlv4t0l7ag6q" path="res://scripts/graybox_wave_manager.gd" id="4_wave_manager"]
+[ext_resource type="Script" uid="uid://cginmafac14hv" path="res://scripts/portrait_survival_layout.gd" id="5_portrait"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/commander_intro.tscn" id="8_commander_intro"]
+[ext_resource type="PackedScene" path="res://scenes/ui/build_palette_popup.tscn" id="9_build_palette"]
+[ext_resource type="Script" uid="uid://6tbf36dy3eng" path="res://scripts/graybox_hover_debug.gd" id="10_hover_debug"]
+[ext_resource type="Texture2D" uid="uid://dgj32uu4jbot5" path="res://assets/map/ground/mars_ground.webp" id="11_mars_ground"]
+[ext_resource type="Script" uid="uid://qicrf8asu66a" path="res://scripts/terrain_variant_layer.gd" id="12_terrain_variants"]
+[ext_resource type="Script" uid="uid://d2xxhny5one0w" path="res://scripts/map_decoration_layer.gd" id="13_map_decorations"]
+[ext_resource type="Shader" uid="uid://cso67seba5p8w" path="res://shaders/fog_edge_fade.gdshader" id="14_fog_shader"]
+[ext_resource type="Shader" uid="uid://b4tk5qo1uy6mr" path="res://shaders/fog_of_war_mask.gdshader" id="15_fog_mask_shader"]
+
+[sub_resource type="StyleBoxFlat" id="PlayfieldStyle"]
+bg_color = Color(0.82, 0.28, 0.09, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.35, 0.42, 1)
+
+[sub_resource type="ShaderMaterial" id="FogMaskMaterial"]
+shader = ExtResource("15_fog_mask_shader")
+shader_parameter/map_origin = Vector2(-2048, -2048)
+shader_parameter/map_size = Vector2(4096, 4096)
+shader_parameter/map_offset = Vector2(0, 0)
+shader_parameter/viewport_size = Vector2(432, 470)
+shader_parameter/map_zoom = 1.0
+shader_parameter/enabled = 1.0
+
+[sub_resource type="StyleBoxFlat" id="SelectionHpBackground"]
+bg_color = Color(0.12, 0.08, 0.06, 1)
+
+[sub_resource type="StyleBoxFlat" id="SelectionHpFill"]
+bg_color = Color(0.88, 0.16, 0.08, 1)
+
+[sub_resource type="StyleBoxFlat" id="MiniMapFrameStyle"]
+bg_color = Color(0.02, 0.015, 0.01, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.58, 0.22, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="ShaderMaterial" id="FogEdgeMaterial"]
+shader = ExtResource("14_fog_shader")
+shader_parameter/edge_softness = 0.75
+
+[node name="GrayboxVerticalSlice" type="Node2D" unique_id=601506284]
+script = ExtResource("1_slice")
+
+[node name="WaveManager" type="Node" parent="." unique_id=601506285]
+script = ExtResource("4_wave_manager")
+wave_counts = Array[int]([10, 10, 11, 12, 13, 14])
+opening_delay = 5.0
+
+[node name="PortraitLayout" type="Node" parent="." unique_id=510224147]
+script = ExtResource("5_portrait")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1963235705]
+z_index = -20
+offset_right = 432.0
+offset_bottom = 768.0
+mouse_filter = 2
+color = Color(0.018, 0.028, 0.045, 1)
+
+[node name="Playfield" type="Panel" parent="." unique_id=1169140947]
+clip_contents = true
+offset_top = 104.0
+offset_right = 432.0
+offset_bottom = 574.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("PlayfieldStyle")
+
+[node name="Entities" type="Node2D" parent="Playfield" unique_id=260847987]
+
+[node name="MarsGround" type="TextureRect" parent="Playfield/Entities" unique_id=718204631]
+texture_filter = 1
+offset_left = -4096.0
+offset_top = -4096.0
+offset_right = 4096.0
+offset_bottom = 4096.0
+mouse_filter = 2
+texture = ExtResource("11_mars_ground")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TerrainVariantLayer" type="Node2D" parent="Playfield/Entities" unique_id=718204632]
+z_index = -5
+script = ExtResource("12_terrain_variants")
+
+[node name="BuildPreview" type="Polygon2D" parent="Playfield/Entities" unique_id=64622462]
+visible = false
+z_index = 4
+color = Color(0.2, 0.9, 0.45, 0.55)
+polygon = PackedVector2Array(-16, -64, 16, -64, 16, -16, 64, -16, 64, 16, 16, 16, 16, 64, -16, 64, -16, 16, -64, 16, -64, -16, -16, -16)
+
+[node name="HoverDebugRadii" type="Node2D" parent="Playfield/Entities" unique_id=563854163]
+z_index = 50
+script = ExtResource("10_hover_debug")
+
+[node name="DecorationLayer" type="Node2D" parent="Playfield/Entities" unique_id=718204633]
+script = ExtResource("13_map_decorations")
+
+[node name="CentralBase" parent="Playfield/Entities" unique_id=564325233 instance=ExtResource("2_base")]
+position = Vector2(216, 235)
+
+[node name="Towers" type="Node2D" parent="Playfield/Entities" unique_id=176416357]
+
+[node name="Enemies" type="Node2D" parent="Playfield/Entities" unique_id=1087231378]
+
+[node name="FogOfWarMask" type="ColorRect" parent="Playfield" unique_id=718204634]
+z_index = 10
+material = SubResource("FogMaskMaterial")
+layout_mode = 0
+offset_right = 432.0
+offset_bottom = 768.0
+mouse_filter = 2
+
+[node name="RetroTopStrip" type="ColorRect" parent="Playfield" unique_id=532861886]
+z_index = 20
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 416.0
+offset_bottom = 80.0
+mouse_filter = 2
+color = Color(0.82, 0.72, 0.52, 1)
+
+[node name="SelectionIcon" type="TextureRect" parent="Playfield/RetroTopStrip" unique_id=839497366]
+z_index = 20
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 58.0
+offset_bottom = 48.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SelectionHpBar" type="ProgressBar" parent="Playfield/RetroTopStrip" unique_id=1046525572]
+z_index = 20
+layout_mode = 0
+offset_left = 4.0
+offset_top = 51.0
+offset_right = 58.0
+offset_bottom = 58.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("SelectionHpBackground")
+theme_override_styles/fill = SubResource("SelectionHpFill")
+value = 100.0
+show_percentage = false
+
+[node name="SelectionTitle" type="Label" parent="Playfield/RetroTopStrip" unique_id=1627775087]
+z_index = 20
+layout_mode = 0
+offset_left = 64.0
+offset_top = 6.0
+offset_right = 440.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "Центральная база"
+
+[node name="SelectionStats" type="Label" parent="Playfield/RetroTopStrip" unique_id=1672502078]
+z_index = 20
+layout_mode = 0
+offset_left = 64.0
+offset_top = 31.0
+offset_right = 440.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(1, 0.9, 0.72, 1)
+theme_override_font_sizes/font_size = 14
+text = "ОЖ: 750   О: 25"
+
+[node name="CreditsBadge" type="ColorRect" parent="Playfield" unique_id=1406670344]
+z_index = 8
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.02, 0.015, 0.01, 0.92)
+
+[node name="CreditsText" type="Label" parent="Playfield/CreditsBadge" unique_id=477666830]
+z_index = 5
+layout_mode = 0
+offset_left = 4.0
+offset_top = 6.0
+offset_right = 92.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "$2500"
+horizontal_alignment = 2
+
+[node name="MiniMap" type="ColorRect" parent="Playfield" unique_id=1690398872]
+z_index = 20
+layout_mode = 0
+offset_left = 16.0
+offset_top = 78.0
+offset_right = 112.0
+offset_bottom = 142.0
+mouse_filter = 2
+color = Color(0.02, 0.015, 0.01, 0.9)
+
+[node name="MiniMapFrame" type="Panel" parent="Playfield/MiniMap" unique_id=718204635]
+z_index = 5
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 66.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("MiniMapFrameStyle")
+
+[node name="AttackMarker" type="Label" parent="Playfield/MiniMap" unique_id=739788027]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 4.0
+offset_right = 100.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(1, 0.1, 0.05, 1)
+theme_override_font_sizes/font_size = 20
+text = "●"
+
+[node name="ViewportRect" type="ColorRect" parent="Playfield/MiniMap" unique_id=492893958]
+z_index = 1
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.35, 0.85, 0.55, 0.35)
+
+[node name="BaseMarker" type="ColorRect" parent="Playfield/MiniMap" unique_id=781642977]
+z_index = 2
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.2, 1, 0.35, 1)
+
+[node name="MiniMapCaption" type="Label" parent="Playfield/MiniMap" unique_id=1806952498]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 38.0
+offset_right = 92.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.9, 0.75, 0.55, 1)
+theme_override_font_sizes/font_size = 10
+text = "РАДАР"
+
+[node name="FogTop" type="ColorRect" parent="Playfield" unique_id=1161411541]
+visible = false
+z_index = 4
+material = SubResource("FogEdgeMaterial")
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 30.0
+mouse_filter = 2
+color = Color(0.01, 0.005, 0.002, 0.72)
+
+[node name="FogBottom" type="ColorRect" parent="Playfield" unique_id=276860539]
+visible = false
+z_index = 4
+material = SubResource("FogEdgeMaterial")
+layout_mode = 0
+offset_top = 450.0
+offset_right = 640.0
+offset_bottom = 480.0
+mouse_filter = 2
+color = Color(0.01, 0.005, 0.002, 0.72)
+
+[node name="FogLeft" type="ColorRect" parent="Playfield" unique_id=774038155]
+visible = false
+z_index = 4
+material = SubResource("FogEdgeMaterial")
+layout_mode = 0
+offset_top = 30.0
+offset_right = 30.0
+offset_bottom = 450.0
+mouse_filter = 2
+color = Color(0.01, 0.005, 0.002, 0.72)
+
+[node name="FogRight" type="ColorRect" parent="Playfield" unique_id=21547276]
+visible = false
+z_index = 4
+material = SubResource("FogEdgeMaterial")
+layout_mode = 0
+offset_left = 610.0
+offset_top = 30.0
+offset_right = 640.0
+offset_bottom = 450.0
+mouse_filter = 2
+color = Color(0.01, 0.005, 0.002, 0.72)
+
+[node name="ContextPanel" type="ColorRect" parent="Playfield" unique_id=301211967]
+visible = false
+z_index = 1000
+layout_mode = 0
+offset_left = 8.0
+offset_top = 372.0
+offset_right = 424.0
+offset_bottom = 472.0
+mouse_filter = 0
+color = Color(0.04, 0.02, 0.015, 0.92)
+
+[node name="ContextTitle" type="Label" parent="Playfield/ContextPanel" unique_id=520505273]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 5.0
+offset_right = 460.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+text = "Строительство"
+
+[node name="ContextHint" type="Label" parent="Playfield/ContextPanel" unique_id=784261383]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 30.0
+offset_right = 460.0
+offset_bottom = 54.0
+theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
+theme_override_font_sizes/font_size = 12
+text = "Выбери здание справа и нажми «Построить»"
+
+[node name="UpgradeBuildingButton" type="Button" parent="Playfield/ContextPanel" unique_id=1072351707]
+visible = false
+layout_mode = 0
+offset_left = 12.0
+offset_top = 62.0
+offset_right = 142.0
+offset_bottom = 92.0
+theme_override_font_sizes/font_size = 10
+text = "Модернизировать"
+
+[node name="RepairBuildingButton" type="Button" parent="Playfield/ContextPanel" unique_id=1072351708]
+visible = false
+layout_mode = 0
+offset_left = 148.0
+offset_top = 62.0
+offset_right = 278.0
+offset_bottom = 92.0
+theme_override_font_sizes/font_size = 10
+text = "Ремонтировать"
+
+[node name="SellBuildingButton" type="Button" parent="Playfield/ContextPanel" unique_id=1072351709]
+visible = false
+layout_mode = 0
+offset_left = 284.0
+offset_top = 62.0
+offset_right = 414.0
+offset_bottom = 92.0
+theme_override_font_sizes/font_size = 10
+text = "Снести"
+
+[node name="ActionPicker" type="OptionButton" parent="Playfield/ContextPanel" unique_id=1072351710]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 5.0
+offset_right = 470.0
+offset_bottom = 31.0
+theme_override_font_sizes/font_size = 11
+selected = 0
+item_count = 1
+popup/item_0/text = "Дополнительное действие"
+popup/item_0/id = 0
+
+[node name="UseActionButton" type="Button" parent="Playfield/ContextPanel" unique_id=2020837686]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 34.0
+offset_right = 470.0
+offset_bottom = 58.0
+theme_override_font_sizes/font_size = 11
+text = "Применить действие"
+
+[node name="ResearchPicker" type="OptionButton" parent="Playfield/ContextPanel" unique_id=834382891]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 62.0
+offset_right = 205.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 11
+selected = 0
+item_count = 1
+popup/item_0/text = "Исследование"
+popup/item_0/id = 0
+
+[node name="ResearchButton" type="Button" parent="Playfield/ContextPanel" unique_id=489881122]
+layout_mode = 0
+offset_left = 212.0
+offset_top = 62.0
+offset_right = 470.0
+offset_bottom = 88.0
+theme_override_font_sizes/font_size = 11
+text = "Исследовать"
+
+[node name="BuildPalettePopup" parent="." unique_id=767498287 instance=ExtResource("9_build_palette")]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="TestHUD" type="Panel" parent="." unique_id=1546672863]
+visible = false
+mouse_filter = 2
+
+[node name="PauseMenu" parent="." unique_id=510546249 instance=ExtResource("7_pause_menu")]
+z_index = 1000
+
+[node name="TestHUDButton" type="Button" parent="." unique_id=791151261]
+visible = false
+
+[node name="PauseTouchButton" type="Button" parent="." unique_id=568084809]
+z_index = 2500
+offset_left = 8.0
+offset_top = 720.0
+offset_right = 112.0
+offset_bottom = 760.0
+mouse_filter = 1
+theme_override_font_sizes/font_size = 16
+text = "ПАУЗА"
+
+[node name="ActionsTouchButton" type="Button" parent="." unique_id=7977424]
+z_index = 2500
+offset_left = 320.0
+offset_top = 720.0
+offset_right = 424.0
+offset_bottom = 760.0
+mouse_filter = 1
+theme_override_font_sizes/font_size = 14
+text = "ДЕЙСТВИЯ"
+
+[node name="PlacementCancelButton" type="Button" parent="." unique_id=983423463]
+visible = false
+z_index = 2600
+offset_left = 160.0
+offset_top = 720.0
+offset_right = 272.0
+offset_bottom = 760.0
+mouse_filter = 1
+theme_override_font_sizes/font_size = 14
+text = "ОТМЕНА"
+
+[node name="ProgressionNotice" type="Control" parent="." unique_id=406636015]
+process_mode = 3
+visible = false
+z_index = 3000
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="ProgressionNotice" unique_id=365541989]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Card" type="Panel" parent="ProgressionNotice" unique_id=344455214]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 220.0
+offset_right = 408.0
+offset_bottom = 548.0
+
+[node name="Title" type="Label" parent="ProgressionNotice/Card" unique_id=1223881976]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 368.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 20
+text = "НОВОЕ ДОСТИЖЕНИЕ"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="ProgressionNotice/Card" unique_id=1821597887]
+process_mode = 3
+layout_mode = 0
+offset_left = 16.0
+offset_top = 52.0
+offset_right = 368.0
+offset_bottom = 244.0
+
+[node name="Message" type="Label" parent="ProgressionNotice/Card/Scroll" unique_id=1757298444]
+custom_minimum_size = Vector2(352, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 2
+
+[node name="ConfirmButton" type="Button" parent="ProgressionNotice/Card" unique_id=538757757]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 260.0
+offset_right = 368.0
+offset_bottom = 304.0
+text = "ПОНЯТНО"
+
+[node name="CommanderIntro" parent="." unique_id=1660627340 instance=ExtResource("8_commander_intro")]
+z_index = 2000
+layout_mode = 3
+anchors_preset = 0

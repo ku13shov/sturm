@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://shaders/beetle_eye_glow.gdshader" id="1_glow_shader"]
+
+[resource]
+shader = ExtResource("1_glow_shader")
+shader_parameter/glow_color = Color(1, 0.22, 0.025, 1)
+shader_parameter/glow_strength = 1.2
+shader_parameter/pulse_speed = 2.6
+shader_parameter/blur_pixels = 5.0

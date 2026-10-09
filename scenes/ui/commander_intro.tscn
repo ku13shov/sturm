@@ -1,0 +1,62 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="IntroPanelStyle"]
+bg_color = Color(0.82, 0.69, 0.52, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.38, 0.3, 0.22, 1)
+
+[node name="CommanderIntro" type="Control"]
+process_mode = 3
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.78)
+
+[node name="Dialog" type="Panel" parent="."]
+layout_mode = 0
+position = Vector2(16, 0)
+size = Vector2(400, 256)
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+theme_override_styles/panel = SubResource("IntroPanelStyle")
+
+[node name="Message" type="Label" parent="Dialog"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 24.0
+offset_right = 374.0
+offset_bottom = 170.0
+theme_override_colors/font_color = Color(0.05, 0.04, 0.03, 1)
+theme_override_font_sizes/font_size = 24
+text = "Неподалеку обнаружены инопланетные существа"
+autowrap_mode = 2
+vertical_alignment = 1
+
+[node name="Speaker" type="Label" parent="Dialog"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 170.0
+offset_right = 374.0
+offset_bottom = 198.0
+theme_override_colors/font_color = Color(0.16, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 14
+text = "КОМАНДИР"
+
+[node name="ConfirmButton" type="Button" parent="Dialog"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 204.0
+offset_right = 376.0
+offset_bottom = 244.0
+theme_override_font_sizes/font_size = 18
+text = "ПОДТВЕРДИТЬ"

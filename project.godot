@@ -10,10 +10,23 @@ config_version=5
 
 [application]
 
-config/name="Sturmtrupp_Mars_3D"
-run/main_scene="res://basic_bug_demo.tscn"
+config/name="Sturmtrupp_Mars_2D"
+run/main_scene="res://scenes/ui/start_menu.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=432
+window/size/viewport_height=768
+window/size/mode=3.0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/android/enable_pan_and_scale_gestures=true
 
 [physics]
 
@@ -23,7 +36,8 @@ config/icon="res://icon.svg"
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
 
 [run]
 
-main_scene="res://basic_bug_demo.tscn"
+main_scene="res://scenes/ui/start_menu.tscn"

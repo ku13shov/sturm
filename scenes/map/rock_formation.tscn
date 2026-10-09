@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://xsgfnn6w3y3l"]
+
+[ext_resource type="Texture2D" uid="uid://d2gusyymfsuv5" path="res://assets/map/rocks/rock_formations.webp" id="1_rock"]
+
+[sub_resource type="ConcavePolygonShape2D" id="ConcavePolygonShape2D_w7oae"]
+segments = PackedVector2Array(283, 183, 173, 133, 37, 144, 94, 169, -15, 48, -16, 86, 49, -13, -17, 47, 94, 170, 173, 134, -15, 87, 36, 144, 284, 183, 352, 156, 413, 89, 352, 156, 413, 88, 372, 3, 371, 3, 349, -38, 349, -39, 288, -40, 288, -41, 234, -105, 234, -105, 202, -182, 203, -181, 174, -188, 173, -189, 98, -161, 98, -160, 77, -123, 77, -123, 48, -13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+[node name="RockFormation" type="StaticBody2D" unique_id=45053152]
+collision_layer = 2
+collision_mask = 0
+metadata/_map_obstacle = true
+metadata/footprint_cells = Vector2i(7, 5)
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=438483334]
+z_index = 5
+texture_filter = 1
+texture = ExtResource("1_rock")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1369601153]
+position = Vector2(-192, -6)
+shape = SubResource("ConcavePolygonShape2D_w7oae")

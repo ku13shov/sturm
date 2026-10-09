@@ -1,0 +1,131 @@
+[gd_resource type="AnimationLibrary" format=3 uid="uid://cvgaculoxcmdi"]
+
+[sub_resource type="Animation" id="Animation_70mdd"]
+resource_name = "presentation"
+length = 18.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AttachedShip:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1, 3.8, 4.8, 5.79, 5.8, 7, 9.8, 10.8, 11.79, 11.8, 13, 15.8, 16.8, 17.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(576, -220), Vector2(576, -220), Vector2(576, 150), Vector2(576, 150), Vector2(576, 150), Vector2(576, -220), Vector2(576, -220), Vector2(576, 150), Vector2(576, 150), Vector2(576, 150), Vector2(576, -220), Vector2(576, -220), Vector2(576, 150), Vector2(576, 150), Vector2(576, -220)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AttachedShip:visible")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 5.8, 5.81, 6, 11.8, 11.81, 12, 17.8, 17.81),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [true, true, false, true, true, false, true, true, false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("DockingBeam:modulate")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 2.8, 3.5, 4.6, 5.6, 5.8, 6, 8.8, 9.5, 10.6, 11.6, 11.8, 12, 14.8, 15.5, 16.6, 17.6, 17.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0.35235), Color(0.4, 0.9, 1, 0.6264), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0.35235), Color(0.4, 0.9, 1, 0.6264), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0.35235), Color(0.4, 0.9, 1, 0.6264), Color(0.4, 0.9, 1, 0), Color(0.4, 0.9, 1, 0)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("LandingDust:modulate")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 3.2, 3.8, 4.6, 5.2, 5.6, 5.8, 6, 9.2, 9.8, 10.6, 11.2, 11.6, 11.8, 12, 15.2, 15.8, 16.6, 17.2, 17.6, 17.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.12799999), Color(1, 1, 1, 0.384), Color(1, 1, 1, 0.4), Color(1, 1, 1, 0.28), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.12799999), Color(1, 1, 1, 0.384), Color(1, 1, 1, 0.4), Color(1, 1, 1, 0.28), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0.12799999), Color(1, 1, 1, 0.384), Color(1, 1, 1, 0.4), Color(1, 1, 1, 0.28), Color(1, 1, 1, 0.28)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("DockingFlash:modulate")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 4.1, 4.25, 4.7, 6, 10.1, 10.25, 10.7, 12, 16.1, 16.25, 16.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(0.55, 0.9, 1, 0.59400004), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(0.55, 0.9, 1, 0.59400004), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(0.55, 0.9, 1, 0.59400004), Color(1, 1, 1, 0)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("BaseL1:visible")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 6, 17.99),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, false, false]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("BaseL2:visible")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 6, 12, 17.99),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [false, true, false, false]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("BaseL3:visible")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 12, 17.99),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, true, true]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("BaseL1Lights:modulate")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.45, 0.9, 1.35, 1.8, 2.25, 2.7, 3.15, 3.6, 4.05, 4.5, 4.95, 5.4, 5.8, 6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(2.4, 3.8, 4.2, 0.06), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 0.06), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 1), Color(2.4, 3.8, 4.2, 0.06), Color(2.4, 3.8, 4.2, 0.06), Color(2.4, 3.8, 4.2, 0.06)]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("BaseL1Lights:visible")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0, 6, 17.99),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, false, false]
+}
+
+[resource]
+_data = {
+&"presentation": SubResource("Animation_70mdd")
+}

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://ck5s4chgyaxs7"]
+
+[ext_resource type="PackedScene" path="res://scenes/graybox/graybox_modern_central_base.tscn" id="1_base"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4cv0q"]
+radius = 121.0
+
+[node name="CentralBaseTemplate" unique_id=330672648 instance=ExtResource("1_base")]
+
+[node name="RetroSprite" parent="." index="1"]
+scale = Vector2(0.25, 0.25)
+
+[node name="LightsOverlay" parent="." index="2"]
+scale = Vector2(0.25, 0.25)
+
+[node name="CollisionShape2D" parent="." index="5"]
+position = Vector2(0, 0)
+scale = Vector2(1, 1)
+shape = SubResource("CircleShape2D_4cv0q")
