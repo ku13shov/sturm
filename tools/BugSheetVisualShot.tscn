@@ -22,5 +22,3 @@ default_color = Color(0.4, 0.4, 0.4, 1)
 [node name="GrayboxBug" parent="." instance=ExtResource("2_bug")]
 position = Vector2(216, 384)
 use_new_bug_visual = true
-use_rig_bug_w = false
-use_sheet_bug_w = true

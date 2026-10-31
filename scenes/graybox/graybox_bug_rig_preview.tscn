@@ -1,10 +1,33 @@
-[gd_scene format=3 uid="uid://c0r77fs4oqyoh"]
+[gd_scene format=3 uid="uid://dh1o4itxamftq"]
 
 [ext_resource type="PackedScene" uid="uid://civ20akgo0dij" path="res://scenes/graybox/graybox_bug.tscn" id="1_bug"]
-[ext_resource type="Script" path="res://scripts/graybox_bug_rig_preview.gd" id="2_preview"]
+
+[sub_resource type="GDScript" id="GDScript_tisnb"]
+script/source = "class_name GrayboxBugRigPreview
+extends Node2D
+
+@export var preview_velocity: Vector2 = Vector2(0.0, -42.0)
+@export var animation_enabled: bool = true
+@export var attack_preview_enabled: bool = true
+@export_range(0.5, 5.0, 0.1) var attack_preview_interval: float = 2.2
+
+@onready var preview_bug: GrayboxBug = $GrayboxBug
+
+var attack_preview_timer: float = 0.0
+
+func _process(delta: float) -> void:
+	if not is_instance_valid(preview_bug):
+		return
+	preview_bug.velocity = preview_velocity if animation_enabled else Vector2.ZERO
+	if attack_preview_enabled:
+		attack_preview_timer -= delta
+		if attack_preview_timer <= 0.0:
+			attack_preview_timer = attack_preview_interval
+			preview_bug.attack_animation_remaining = preview_bug.attack_animation_duration
+"
 
 [node name="BugRigPreview" type="Node2D" unique_id=1128788937]
-script = ExtResource("2_preview")
+script = SubResource("GDScript_tisnb")
 
 [node name="GrayboxBug" parent="." unique_id=1026164129 instance=ExtResource("1_bug")]
 position = Vector2(216, 384)

@@ -91,11 +91,13 @@ var debug_button: Button
 var debug_menu: Panel
 var debug_money_button: Button
 var debug_fog_button: Button
-var debug_cell_diamond_button: Button
-var debug_muzzle_points_button: Button
+var debug_spawn_button: Button
 var debug_close_button: Button
 var debug_cell_diamond_enabled: bool = false
-var debug_muzzle_points_enabled: bool = false
+## Индекс режима спавна: 0 = случайно, 1..8 = фиксированная сторона (см. DEBUG_SPAWN_LABELS).
+var debug_spawn_mode: int = 0
+const DEBUG_SPAWN_LABELS: Array[String] = ["СЛУЧАЙНО", "ВЕРХ", "ВЕРХ-ПРАВО", "ПРАВО", "НИЗ-ПРАВО", "НИЗ", "НИЗ-ЛЕВО", "ЛЕВО", "ВЕРХ-ЛЕВО"]
+const DEBUG_SPAWN_DIRECTIONS: Array[Vector2] = [Vector2(0, -1), Vector2(1, -1), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(-1, 1), Vector2(-1, 0), Vector2(-1, -1)]
 var fog_reveal_infinite: bool = false
 @onready var test_hud_panel: Control = $TestHUD
 
@@ -227,7 +229,7 @@ func _capture_save_data() -> Dictionary:
 	var enemy_data: Array[Dictionary] = []
 	for enemy_node: Node in enemies.get_children():
 		var enemy: GrayboxBug = enemy_node as GrayboxBug
-		if is_instance_valid(enemy):
+		if is_instance_valid(enemy) and not enemy.is_dying:
 			enemy_data.append(enemy.save_state())
 	var save_data: Dictionary = {
 		"version": 2,
@@ -520,8 +522,8 @@ func _setup_debug_controls() -> void:
 
 	debug_menu = Panel.new()
 	debug_menu.name = "DebugMenu"
-	debug_menu.position = Vector2(8.0, 430.0)
-	debug_menu.size = Vector2(300.0, 320.0)
+	debug_menu.position = Vector2(8.0, 400.0)
+	debug_menu.size = Vector2(300.0, 265.0)
 	debug_menu.z_index = 2700
 	debug_menu.visible = false
 	add_child(debug_menu)
@@ -546,22 +548,15 @@ func _setup_debug_controls() -> void:
 	debug_fog_button.pressed.connect(_on_debug_fog_pressed)
 	debug_menu.add_child(debug_fog_button)
 
-	debug_cell_diamond_button = Button.new()
-	debug_cell_diamond_button.position = Vector2(14.0, 153.0)
-	debug_cell_diamond_button.size = Vector2(270.0, 42.0)
-	debug_cell_diamond_button.text = "РОМБ КЛЕТКИ: ВЫКЛ"
-	debug_cell_diamond_button.pressed.connect(_on_debug_cell_diamond_pressed)
-	debug_menu.add_child(debug_cell_diamond_button)
-
-	debug_muzzle_points_button = Button.new()
-	debug_muzzle_points_button.position = Vector2(14.0, 198.0)
-	debug_muzzle_points_button.size = Vector2(270.0, 42.0)
-	debug_muzzle_points_button.text = "ТОЧКИ ДУЛА: ВЫКЛ"
-	debug_muzzle_points_button.pressed.connect(_on_debug_muzzle_points_pressed)
-	debug_menu.add_child(debug_muzzle_points_button)
+	debug_spawn_button = Button.new()
+	debug_spawn_button.position = Vector2(14.0, 153.0)
+	debug_spawn_button.size = Vector2(270.0, 42.0)
+	debug_spawn_button.text = "СПАВН: " + DEBUG_SPAWN_LABELS[debug_spawn_mode]
+	debug_spawn_button.pressed.connect(_on_debug_spawn_pressed)
+	debug_menu.add_child(debug_spawn_button)
 
 	debug_close_button = Button.new()
-	debug_close_button.position = Vector2(14.0, 253.0)
+	debug_close_button.position = Vector2(14.0, 208.0)
 	debug_close_button.size = Vector2(270.0, 38.0)
 	debug_close_button.text = "ЗАКРЫТЬ"
 	debug_close_button.pressed.connect(_on_debug_button_pressed)
@@ -589,22 +584,17 @@ func _on_debug_fog_pressed() -> void:
 	debug_fog_button.text = "ТУМАН РАСКРЫТ"
 	debug_fog_button.disabled = true
 
-func _on_debug_cell_diamond_pressed() -> void:
-	debug_cell_diamond_enabled = not debug_cell_diamond_enabled
-	debug_cell_diamond_button.text = "РОМБ КЛЕТКИ: ВКЛ" if debug_cell_diamond_enabled else "РОМБ КЛЕТКИ: ВЫКЛ"
-	for tower_node: Node in towers.get_children():
-		_apply_cell_diamond_debug(tower_node as GrayboxTower)
-
-func _on_debug_muzzle_points_pressed() -> void:
-	debug_muzzle_points_enabled = not debug_muzzle_points_enabled
-	debug_muzzle_points_button.text = "ТОЧКИ ДУЛА: ВКЛ" if debug_muzzle_points_enabled else "ТОЧКИ ДУЛА: ВЫКЛ"
-	for tower_node: Node in towers.get_children():
-		var tower: GrayboxTower = tower_node as GrayboxTower
-		if not is_instance_valid(tower):
-			continue
-		var soldier_visual: SoldiersTower = tower.get_node_or_null("SoldierVisual") as SoldiersTower
-		if soldier_visual != null:
-			soldier_visual.set_debug_muzzle_points(debug_muzzle_points_enabled)
+func _on_debug_spawn_pressed() -> void:
+	# Переключает режим по кругу: случайно -> 8 сторон света экрана.
+	debug_spawn_mode = (debug_spawn_mode + 1) % DEBUG_SPAWN_LABELS.size()
+	debug_spawn_button.text = "СПАВН: " + DEBUG_SPAWN_LABELS[debug_spawn_mode]
+	if debug_spawn_mode == 0:
+		active_spawn_position = _random_edge_spawn()
+	else:
+		var half_extent: float = float(MapGrid.WIDTH) * MapGrid.CELL_SIZE * 0.5 + SPAWN_MARGIN
+		active_spawn_position = DEBUG_SPAWN_DIRECTIONS[debug_spawn_mode - 1] * half_extent
+	_update_spawn_marker()
+	_update_hud("Дебаг: спавн жуков — " + DEBUG_SPAWN_LABELS[debug_spawn_mode].to_lower())
 
 func _apply_cell_diamond_debug(tower: GrayboxTower) -> void:
 	if not is_instance_valid(tower):

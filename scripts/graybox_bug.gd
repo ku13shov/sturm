@@ -3,6 +3,8 @@ extends CharacterBody2D
 
 const MOVEMENT_ACCELERATION: float = 150.0
 const MOVEMENT_DECELERATION: float = 220.0
+## За сколько секунд до удара запускается анимация атаки, чтобы кадр удара совпал с уроном.
+const ATTACK_VISUAL_LEAD: float = 0.18
 
 signal health_changed(current_health: float, maximum_health: float)
 signal died
@@ -14,15 +16,13 @@ signal died
 @export_range(0.05, 1.0, 0.01) var attack_animation_duration: float = 0.30
 @export var temporary_balance_status: String = "TEMPORARY_BALANCE"
 @export var use_new_bug_visual: bool = true
-## Включает экспериментальный риг только для боковых направлений W/E.
-@export var use_rig_bug_w: bool = false
-@export var use_sheet_bug_w: bool = false
+## Единый листовой жук на 8 направлений (BugSheetVisual8Dir). Если лист не найден, узел отключается сам и показывается NewBugVisual.
+@export var use_sheet_bug_8dir: bool = true
 @export var bug_visual_height_px: float = 36.0
 
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var new_bug_visual: Node2D = get_node_or_null("NewBugVisual") as Node2D
-@onready var rig_bug_w: Node2D = get_node_or_null("BugRigW") as Node2D
-@onready var sheet_bug_w: Node2D = get_node_or_null("BugSheetVisualW") as Node2D
+@onready var sheet_bug_8dir: Node2D = get_node_or_null("BugSheetVisual8Dir") as Node2D
 @onready var legacy_bug_visual: Node2D = get_node_or_null("BugAnimatedSprite") as Node2D
 
 var profile: Dictionary = {}
@@ -52,10 +52,8 @@ func _ready() -> void:
 		visual_script.set("bug_visual_height_px", bug_visual_height_px)
 	if is_instance_valid(legacy_bug_visual):
 		legacy_bug_visual.visible = not use_new_bug_visual
-	if is_instance_valid(rig_bug_w):
-		rig_bug_w.set("bug_visual_height_px", bug_visual_height_px)
-	if is_instance_valid(sheet_bug_w):
-		sheet_bug_w.call("set_visual_height_px", 26.0)
+	if is_instance_valid(sheet_bug_8dir):
+		sheet_bug_8dir.call("set_visual_height_px", 26.0)
 	_update_visual_direction()
 	# Navigation already routes around rocks. Do not let CharacterBody2D physics
 	# re-collide with those rocks, otherwise a corner on one map side can trap
@@ -87,19 +85,17 @@ func map_scale() -> float:
 	return maxf(absf(parent_node.global_scale.x), 0.01)
 
 func _update_visual_direction() -> void:
-	var side_profile: bool = velocity.length_squared() > 0.01 and absf(velocity.x) >= absf(velocity.y)
-	var sheet_active: bool = use_sheet_bug_w and side_profile and is_instance_valid(sheet_bug_w)
-	var rig_active: bool = use_rig_bug_w and side_profile and not sheet_active and is_instance_valid(rig_bug_w)
-	if is_instance_valid(rig_bug_w):
-		rig_bug_w.visible = rig_active
-	if is_instance_valid(sheet_bug_w):
-		sheet_bug_w.visible = sheet_active
+	# Направление и анимацию внутри BugSheetVisual8Dir выбирает сам узел по фактической скорости.
+	var sheet_active: bool = _sheet_8dir_active()
+	if is_instance_valid(sheet_bug_8dir):
+		sheet_bug_8dir.visible = sheet_active
 	if is_instance_valid(new_bug_visual):
-		new_bug_visual.visible = use_new_bug_visual and not rig_active and not sheet_active
-	if rig_active:
-		rig_bug_w.call("set_mirror_x", -1.0 if velocity.x > 0.0 else 1.0)
-	if sheet_active and absf(velocity.x) > 0.1:
-		sheet_bug_w.get_node("AnimatedSprite2D").flip_h = velocity.x > 0.0
+		new_bug_visual.visible = use_new_bug_visual and not sheet_active
+
+func _sheet_8dir_active() -> bool:
+	if not use_sheet_bug_8dir or not is_instance_valid(sheet_bug_8dir):
+		return false
+	return bool(sheet_bug_8dir.get("available"))
 
 func set_target(base: GrayboxBase) -> void:
 	target = base
@@ -232,6 +228,8 @@ func _physics_process(delta: float) -> void:
 			base_engaged = true
 		elif target is GrayboxTower:
 			secondary_target_engaged = true
+		if _sheet_8dir_active() and attack_cooldown <= ATTACK_VISUAL_LEAD:
+			sheet_bug_8dir.call("play_attack", target.global_position - global_position)
 		if attack_cooldown <= 0.0:
 			target.call("take_damage", source_damage)
 			attack_cooldown = attack_interval
@@ -246,10 +244,8 @@ func take_typed_damage(raw_amount: float, channel: String) -> void:
 	health_bar.value = health
 	if use_new_bug_visual and is_instance_valid(new_bug_visual) and new_bug_visual.visible:
 		new_bug_visual.call("on_hit")
-	if use_rig_bug_w and is_instance_valid(rig_bug_w) and rig_bug_w.visible:
-		rig_bug_w.call("on_hit")
-	if use_sheet_bug_w and is_instance_valid(sheet_bug_w) and sheet_bug_w.visible:
-		sheet_bug_w.call("on_hit")
+	if _sheet_8dir_active() and sheet_bug_8dir.visible:
+		sheet_bug_8dir.call("on_hit")
 	var animated_bug: Sprite2D = get_node_or_null("BugAnimatedSprite/Body") as Sprite2D
 	if not use_new_bug_visual and is_instance_valid(animated_bug):
 		if hit_flash_tween != null and hit_flash_tween.is_valid():
@@ -261,4 +257,24 @@ func take_typed_damage(raw_amount: float, channel: String) -> void:
 	health_changed.emit(health, max_health)
 	if health <= 0.0:
 		died.emit()
+		_begin_death()
+
+## Жук уже мёртв для игры (не цель, не сохраняется), но ещё доигрывает анимацию.
+var is_dying: bool = false
+
+func _begin_death() -> void:
+	if is_dying:
+		return
+	if not (_sheet_8dir_active() and bool(sheet_bug_8dir.get("has_death"))):
 		queue_free()
+		return
+	is_dying = true
+	set_physics_process(false)
+	velocity = Vector2.ZERO
+	collision_layer = 0
+	collision_mask = 0
+	remove_from_group("graybox_enemies")
+	health_bar.visible = false
+	sheet_bug_8dir.visible = true
+	sheet_bug_8dir.connect("death_finished", queue_free, CONNECT_ONE_SHOT)
+	sheet_bug_8dir.call("play_death")
