@@ -16,6 +16,9 @@ const PAD_MARKS: Array[Vector2] = [Vector2(192.0, 46.0), Vector2(288.0, 104.0), 
 @export var soldier_visual_height_px: float = 40.0
 @export_range(0.5, 1.5, 0.01) var ground_shadow_width_fraction_of_pad: float = 1.15
 @export var use_new_soldier_visual: bool = true
+## Включает листового солдата нового образца (покой, выстрел, смерть кодом). Без листов в
+## res://assets/sprites/units/soldiers/ автоматически остаётся старый солдат.
+@export var use_sheet_soldier: bool = true
 @export var debug_cell_diamond: bool = false
 @export var debug_muzzle_points: bool = false
 @export_range(0.0, 0.08, 0.005) var soldier_shot_delay_max: float = 0.08
@@ -49,6 +52,7 @@ func _ready() -> void:
 		if not Engine.is_editor_hint():
 			soldier.set_visual_scale(base_sprite_scale * SCALE_VARIATIONS[index])
 			soldier.use_new_soldier_visual = use_new_soldier_visual
+			soldier.use_sheet_soldier = use_sheet_soldier
 			soldier.set_debug_muzzle_points(debug_muzzle_points)
 	if not Engine.is_editor_hint():
 		call_deferred("_ready_screen_report")
@@ -67,6 +71,18 @@ func play_shot(target_global_position: Vector2) -> void:
 		if is_instance_valid(soldier):
 			var delay: float = randf_range(0.0, soldier_shot_delay_max)
 			get_tree().create_timer(delay).timeout.connect(soldier.play_shot.bind(target_global_position), CONNECT_ONE_SHOT)
+
+## Вспышка попадания по всем солдатам башни (листовой визуал).
+func on_hit() -> void:
+	for soldier: Soldier in soldiers:
+		if is_instance_valid(soldier):
+			soldier.on_hit()
+
+## Смерть башни: эффекты солдат создаются в parent, после чего башню можно сразу удалять.
+func spawn_death_fx(parent: Node) -> void:
+	for soldier: Soldier in soldiers:
+		if is_instance_valid(soldier):
+			soldier.spawn_death_fx(parent)
 
 func set_debug_muzzle_points(enabled: bool) -> void:
 	debug_muzzle_points = enabled

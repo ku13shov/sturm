@@ -15,15 +15,11 @@ signal died
 @export var attack_interval: float = 1.0
 @export_range(0.05, 1.0, 0.01) var attack_animation_duration: float = 0.30
 @export var temporary_balance_status: String = "TEMPORARY_BALANCE"
-@export var use_new_bug_visual: bool = true
-## Единый листовой жук на 8 направлений (BugSheetVisual8Dir). Если лист не найден, узел отключается сам и показывается NewBugVisual.
+## Единый листовой жук на 8 направлений (BugSheetVisual8Dir). Если лист не найден, узел отключается сам.
 @export var use_sheet_bug_8dir: bool = true
-@export var bug_visual_height_px: float = 36.0
 
 @onready var health_bar: ProgressBar = $HealthBar
-@onready var new_bug_visual: Node2D = get_node_or_null("NewBugVisual") as Node2D
 @onready var sheet_bug_8dir: Node2D = get_node_or_null("BugSheetVisual8Dir") as Node2D
-@onready var legacy_bug_visual: Node2D = get_node_or_null("BugAnimatedSprite") as Node2D
 
 var profile: Dictionary = {}
 var health: float = 0.0
@@ -37,7 +33,6 @@ var target_provider: Callable
 @export var graybox_damage: float = 3.0
 var attack_cooldown: float = 0.0
 var attack_animation_remaining: float = 0.0
-var hit_flash_tween: Tween
 var paralyzed_until: float = 0.0
 var path_points: Array[Vector2] = []
 var path_index: int = 0
@@ -46,12 +41,6 @@ var base_engaged: bool = false
 var secondary_target_engaged: bool = false
 
 func _ready() -> void:
-	if is_instance_valid(new_bug_visual):
-		new_bug_visual.visible = use_new_bug_visual
-		var visual_script: Node = new_bug_visual
-		visual_script.set("bug_visual_height_px", bug_visual_height_px)
-	if is_instance_valid(legacy_bug_visual):
-		legacy_bug_visual.visible = not use_new_bug_visual
 	if is_instance_valid(sheet_bug_8dir):
 		sheet_bug_8dir.call("set_visual_height_px", 26.0)
 	_update_visual_direction()
@@ -89,8 +78,6 @@ func _update_visual_direction() -> void:
 	var sheet_active: bool = _sheet_8dir_active()
 	if is_instance_valid(sheet_bug_8dir):
 		sheet_bug_8dir.visible = sheet_active
-	if is_instance_valid(new_bug_visual):
-		new_bug_visual.visible = use_new_bug_visual and not sheet_active
 
 func _sheet_8dir_active() -> bool:
 	if not use_sheet_bug_8dir or not is_instance_valid(sheet_bug_8dir):
@@ -215,10 +202,6 @@ func _physics_process(delta: float) -> void:
 		var target_velocity: Vector2 = desired_direction * controlled_speed * map_zoom_scale
 		var acceleration: float = (MOVEMENT_ACCELERATION if velocity.dot(target_velocity) >= 0.0 else MOVEMENT_DECELERATION) * map_zoom_scale
 		velocity = velocity.move_toward(target_velocity, acceleration * delta)
-		var bug_sprite: Node2D = get_node_or_null("BugAnimatedSprite") as Node2D
-		if not use_new_bug_visual and is_instance_valid(bug_sprite) and velocity.length_squared() > 0.01:
-			# The modular beetle faces up; rotate it smoothly to match travel direction.
-			bug_sprite.rotation = lerp_angle(bug_sprite.rotation, velocity.angle() + PI / 2.0, clampf(delta * 8.0, 0.0, 1.0))
 		_update_visual_direction()
 		move_and_slide()
 	else:
@@ -242,17 +225,8 @@ func take_typed_damage(raw_amount: float, channel: String) -> void:
 	var effective_amount: float = raw_amount * maxf(0.0, 1.0 - resistance_percent / 100.0)
 	health = maxf(health - effective_amount, 0.0)
 	health_bar.value = health
-	if use_new_bug_visual and is_instance_valid(new_bug_visual) and new_bug_visual.visible:
-		new_bug_visual.call("on_hit")
 	if _sheet_8dir_active() and sheet_bug_8dir.visible:
 		sheet_bug_8dir.call("on_hit")
-	var animated_bug: Sprite2D = get_node_or_null("BugAnimatedSprite/Body") as Sprite2D
-	if not use_new_bug_visual and is_instance_valid(animated_bug):
-		if hit_flash_tween != null and hit_flash_tween.is_valid():
-			hit_flash_tween.kill()
-		animated_bug.modulate = Color(1.0, 0.35, 0.25, 1.0)
-		hit_flash_tween = create_tween()
-		hit_flash_tween.tween_property(animated_bug, "modulate", Color.WHITE, 0.10)
 	health_bar.visible = true
 	health_changed.emit(health, max_health)
 	if health <= 0.0:

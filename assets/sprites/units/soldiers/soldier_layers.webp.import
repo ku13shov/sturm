@@ -2,20 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://kgg3elsf3ddw"
-path="res://.godot/imported/bug_3_nw.png-6ef53377f8af20730e8553ef93fac3df.ctex"
+uid="uid://6hi30mitlisq"
+path.s3tc="res://.godot/imported/soldier_layers.webp-f67ef2acd411d20d4b15e82aa2af7fef.s3tc.ctex"
+path.etc2="res://.godot/imported/soldier_layers.webp-f67ef2acd411d20d4b15e82aa2af7fef.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://assets/generated/bug_3_nw.png"
-dest_files=["res://.godot/imported/bug_3_nw.png-6ef53377f8af20730e8553ef93fac3df.ctex"]
+source_file="res://assets/sprites/units/soldiers/soldier_layers.webp"
+dest_files=["res://.godot/imported/soldier_layers.webp-f67ef2acd411d20d4b15e82aa2af7fef.s3tc.ctex", "res://.godot/imported/soldier_layers.webp-f67ef2acd411d20d4b15e82aa2af7fef.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

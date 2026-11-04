@@ -116,6 +116,9 @@ func set_visual_height_px(value: float) -> void:
 		_apply_shadow()
 
 func _ready() -> void:
+	# Материал из сцены общий для всех экземпляров: без копии вспышка попадания зажигает всех жуков сразу.
+	if animated_sprite != null and animated_sprite.material != null:
+		animated_sprite.material = animated_sprite.material.duplicate()
 	if sheet == null and ResourceLoader.exists(DEFAULT_SHEET_PATH):
 		sheet = load(DEFAULT_SHEET_PATH) as Texture2D
 	if glow_mask == null and ResourceLoader.exists(DEFAULT_MASK_PATH):
@@ -362,12 +365,16 @@ func _apply_shadow() -> void:
 	if shadow_material != null:
 		shadow_material.set_shader_parameter("shadow_opacity", shadow_opacity)
 
+var hit_tween: Tween
+
 func on_hit() -> void:
 	var hit_material: ShaderMaterial = animated_sprite.material as ShaderMaterial
 	if hit_material != null:
+		if hit_tween != null and hit_tween.is_valid():
+			hit_tween.kill()
 		hit_material.set_shader_parameter("hit_flash", 1.0)
-		var tween: Tween = create_tween()
-		tween.tween_method(_set_hit_flash.bind(hit_material), 1.0, 0.0, 0.07)
+		hit_tween = create_tween()
+		hit_tween.tween_method(_set_hit_flash.bind(hit_material), 1.0, 0.0, 0.07)
 
 func _set_hit_flash(value: float, hit_material: ShaderMaterial) -> void:
 	if is_instance_valid(hit_material):

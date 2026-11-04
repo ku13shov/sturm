@@ -2,8 +2,6 @@
 
 [ext_resource type="Shader" uid="uid://cj8pbvjiin3ww" path="res://shaders/bug_hit_flash.gdshader" id="2_hit"]
 [ext_resource type="Shader" uid="uid://bysu3sg0ivxbm" path="res://shaders/bug_contact_shadow.gdshader" id="3_shadow"]
-[ext_resource type="Texture2D" uid="uid://j4i3nj5sovdy" path="res://assets/sprites/units/new_base_bug/sw_bug_sprite.png" id="4_sheet"]
-[ext_resource type="Texture2D" uid="uid://dwgwfrmf6e2gn" path="res://assets/sprites/units/new_base_bug/sw_bug_sprite-mask.png" id="5_mask"]
 
 [sub_resource type="GDScript" id="GDScript_640km"]
 script/source = "class_name BugSheetVisual
@@ -201,6 +199,12 @@ func _set_hit_flash(value: float, hit_material: ShaderMaterial) -> void:
 		hit_material.set_shader_parameter(\"hit_flash\", value)
 "
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_s8ftf"]
+load_path = "res://.godot/imported/sw_bug_sprite.png-b8b7ec71bd40a52de2c5b561045ae6f5.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_5uw8q"]
+load_path = "res://.godot/imported/sw_bug_sprite-mask.png-2e17701532f30a3c409e1fcbe1881326.ctex"
+
 [sub_resource type="ShaderMaterial" id="ShadowMaterial"]
 shader = ExtResource("3_shadow")
 shader_parameter/shadow_color = Color(0.16, 0.045, 0.02, 1)
@@ -228,8 +232,8 @@ blend_mode = 1
 [node name="BugSheetVisualSW" type="Node2D" unique_id=917407002]
 texture_filter = 4
 script = SubResource("GDScript_640km")
-sheet = ExtResource("4_sheet")
-glow_mask = ExtResource("5_mask")
+sheet = SubResource("CompressedTexture2D_s8ftf")
+glow_mask = SubResource("CompressedTexture2D_5uw8q")
 frame_size = Vector2i(290, 220)
 pivot_in_frame = Vector2(145, 195)
 export_zoom = 5.0

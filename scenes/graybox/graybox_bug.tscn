@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://civ20akgo0dij"]
 
 [ext_resource type="Script" uid="uid://dfbg7emge57i5" path="res://scripts/graybox_bug.gd" id="1_bug"]
-[ext_resource type="PackedScene" uid="uid://crm58bc2uymvs" path="res://scenes/units/NewBugVisual.tscn" id="3_new_visual"]
 [ext_resource type="PackedScene" path="res://scenes/units/BugSheetVisual8Dir.tscn" id="9_sheet_visual_8dir"]
 
 [sub_resource type="CircleShape2D" id="BugShape"]
@@ -12,8 +11,6 @@ z_index = 3
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("1_bug")
-
-[node name="NewBugVisual" parent="." unique_id=518412056 instance=ExtResource("3_new_visual")]
 
 [node name="BugSheetVisual8Dir" parent="." instance=ExtResource("9_sheet_visual_8dir")]
 

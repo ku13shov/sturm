@@ -105,10 +105,14 @@ func take_damage(amount: float) -> void:
 	health_changed.emit(health, max_health)
 	if health <= 0.0:
 		_set_state(GrayboxBuildingState.DESTROYED)
+		if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("spawn_death_fx") and is_instance_valid(get_parent()):
+			new_soldier_visual.call("spawn_death_fx", get_parent())
 		destroyed.emit()
 		queue_free()
 	else:
 		_set_state(GrayboxBuildingState.DAMAGED)
+		if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("on_hit"):
+			new_soldier_visual.call("on_hit")
 
 func restore_saved_state(saved_health: float, saved_upgrade_level: int) -> void:
 	while upgrade_level < clampi(saved_upgrade_level, 0, max_upgrade_level):
