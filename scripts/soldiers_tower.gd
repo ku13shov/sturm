@@ -14,17 +14,30 @@ const PAD_MARKS: Array[Vector2] = [Vector2(192.0, 46.0), Vector2(288.0, 104.0), 
 @export_range(0.8, 1.2, 0.01) var pad_top_width_fraction_of_cell: float = 1.0
 @export_range(0.5, 1.0, 0.01) var pad_y_scale_ratio: float = 0.88
 @export var soldier_visual_height_px: float = 40.0
+## Сдвиг всех солдат вниз (к зрителю) относительно кружков на плите, в px мира. 0 = ровно по центру кружков.
+@export_range(-6.0, 6.0, 0.25) var soldier_foot_offset_px: float = 2.0
 @export_range(0.5, 1.5, 0.01) var ground_shadow_width_fraction_of_pad: float = 1.15
 @export var use_new_soldier_visual: bool = true
 ## Включает листового солдата нового образца (покой, выстрел, смерть кодом). Без листов в
 ## res://assets/sprites/units/soldiers/ автоматически остаётся старый солдат.
 @export var use_sheet_soldier: bool = true
+## Анимации тумбы: мигающие полоски, посадка при постройке, разрушение на осколки с пылью.
+@export var use_pad_fx: bool = true
+## На каком уровне апгрейда (upgrade_level башни) показываются барьеры: 1 = второй уровень. На 0 и 2 их нет.
+@export_range(0, 2) var barrier_upgrade_level: int = 1
+## С какого уровня апгрейда солдаты получают акцентный цвет (1 = второй уровень и выше).
+@export_range(0, 2) var upgrade_style_min_level: int = 1
+## Цвет свечения деталей, вспышки, трассера и искр на улучшенной башне (на базовой голубой).
+@export var upgrade_accent_color: Color = Color(1.0, 0.6, 0.12)
+## Во сколько раз вспышка выстрела крупнее базовой на улучшенной башне.
+@export_range(1.0, 2.0, 0.05) var upgrade_flash_multiplier: float = 1.25
 @export var debug_cell_diamond: bool = false
 @export var debug_muzzle_points: bool = false
 @export_range(0.0, 0.08, 0.005) var soldier_shot_delay_max: float = 0.08
 
 var soldiers: Array[Soldier] = []
-@onready var pad: Sprite2D = $Pad
+var pad_fx: SoldierPadFx
+@onready var pad: SoldierPad = $Pad
 @onready var ground_shadow: GroundShadow = $GroundShadow
 
 func _ready() -> void:
@@ -43,7 +56,7 @@ func _ready() -> void:
 	var pad_scale: Vector2 = pad.scale
 	var offsets: Array[Vector2] = []
 	for mark: Vector2 in PAD_MARKS:
-		offsets.append((mark - PAD_PIVOT) * pad_scale)
+		offsets.append((mark - PAD_PIVOT) * pad_scale + Vector2(0.0, soldier_foot_offset_px))
 	var base_sprite_scale: float = soldier_visual_height_px / 150.0
 	for index: int in soldiers.size():
 		var soldier: Soldier = soldiers[index]
@@ -74,12 +87,37 @@ func play_shot(target_global_position: Vector2) -> void:
 
 ## Вспышка попадания по всем солдатам башни (листовой визуал).
 func on_hit() -> void:
+	pad.flash_hit()
 	for soldier: Soldier in soldiers:
 		if is_instance_valid(soldier):
 			soldier.on_hit()
 
+## Здоровье башни для цвета полосок тумбы: голубой, жёлтый, красный.
+func set_health(current_health: float, maximum_health: float) -> void:
+	if is_instance_valid(pad) and maximum_health > 0.0:
+		pad.health_ratio = current_health / maximum_health
+
+## Уровень апгрейда башни (0 = базовая). Барьеры тумбы показываются только на barrier_upgrade_level.
+## Улучшенный вид солдат (со второго уровня апгрейда): другой оттенок свечения деталей, вспышки,
+## трассера и искр, вспышка чуть крупнее. На базовом уровне остаются цвета студии.
+func _apply_upgrade_style(level: int) -> void:
+	var on: bool = use_new_soldier_visual and level >= upgrade_style_min_level
+	for soldier: Soldier in soldiers:
+		if is_instance_valid(soldier):
+			soldier.set_accent(on, upgrade_accent_color, upgrade_flash_multiplier)
+
+
+func set_upgrade_level(level: int, animate := true) -> void:
+	_apply_upgrade_style(level)
+	if is_instance_valid(pad):
+		var was: bool = pad.barriers_enabled
+		pad.barriers_enabled = use_new_soldier_visual and level == barrier_upgrade_level
+		if animate and use_pad_fx and pad.barriers_enabled and not was:
+			pad.play_barrier_appear()
+
 ## Смерть башни: эффекты солдат создаются в parent, после чего башню можно сразу удалять.
 func spawn_death_fx(parent: Node) -> void:
+	pad.detach_and_destroy(parent)
 	for soldier: Soldier in soldiers:
 		if is_instance_valid(soldier):
 			soldier.spawn_death_fx(parent)

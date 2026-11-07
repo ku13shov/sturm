@@ -2,20 +2,18 @@
 
 [ext_resource type="Script" uid="uid://bmj73y7sjag32" path="res://scripts/soldiers_tower.gd" id="1_tower"]
 [ext_resource type="PackedScene" uid="uid://blpj4d3y6biqq" path="res://scenes/units/Soldier.tscn" id="2_soldier"]
-[ext_resource type="Texture2D" uid="uid://b7t2g80qq4des" path="res://assets/sprites/units/soldiers/pad_soldiers.png" id="3_pad"]
+[ext_resource type="Script" path="res://scripts/soldier_pad.gd" id="3_pad"]
 [ext_resource type="PackedScene" uid="uid://cd601nxvbflij" path="res://scenes/fx/GroundShadow.tscn" id="4_shadow"]
 
 [node name="SoldiersTower" type="Node2D" unique_id=877758704]
 y_sort_enabled = true
 script = ExtResource("1_tower")
 
-[node name="Pad" type="Sprite2D" parent="." unique_id=908009470]
+[node name="Pad" type="Node2D" parent="." unique_id=908009470]
 z_index = -2
 texture_filter = 4
 scale = Vector2(0.2513089, 0.22115183)
-texture = ExtResource("3_pad")
-centered = false
-offset = Vector2(-192, -109)
+script = ExtResource("3_pad")
 
 [node name="GroundShadow" parent="." unique_id=884538521 instance=ExtResource("4_shadow")]
 

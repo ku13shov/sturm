@@ -15,7 +15,7 @@ const SHOT_MASK_PATH: String = FOLDER + "soldier_shot_5dir-mask.webp"
 
 const GLOW_PULSE_PERIOD: float = 1.6
 ## Отдача руки в студийных px (поле «Отдача» студии), нужна, чтобы вспышка следовала за дулом.
-const RECOIL_CANVAS_PX: float = 6.5
+const RECOIL_CANVAS_PX: float = SoldierSheetData.RECOIL_PX
 const FLASH_DURATION: float = 0.1
 const HIT_DURATION: float = 0.25
 const HIT_SHAKE_CANVAS_PX: float = 3.5
@@ -37,6 +37,7 @@ static var _flash_texture: GradientTexture2D
 var available: bool = false
 var body_sprite: Sprite2D
 var glow_sprite: Sprite2D
+var shadow_sprite: Sprite2D
 var flash_layer: FlashLayer
 var direction_index: int = 0
 var row: int = 0
@@ -56,6 +57,53 @@ var _frame: int = -1
 var _applied_row: int = -1
 var _hit_time: float = -1.0
 var _hit_material: ShaderMaterial
+const GLOW_TINT_SHADER: Shader = preload("res://shaders/soldier_glow_tint.gdshader")
+var _accent_on: bool = false
+var _accent_color: Color = Color.WHITE
+var _base_flash_multiplier: float = -1.0
+var _accent_flash_texture: GradientTexture2D
+var _tint_material: ShaderMaterial
+
+
+## Перекрашивает свечение деталей и вспышку выстрела в accent и меняет размер вспышки.
+## enabled = false возвращает цвета студии.
+func set_accent(enabled: bool, color: Color = Color.WHITE, flash_multiplier: float = 1.0) -> void:
+	if _base_flash_multiplier < 0.0:
+		_base_flash_multiplier = flash_size_multiplier
+	_accent_on = enabled
+	_accent_color = color
+	flash_size_multiplier = _base_flash_multiplier * (flash_multiplier if enabled else 1.0)
+	if enabled:
+		_accent_flash_texture = _make_flash_texture(color)
+		if _tint_material == null:
+			_tint_material = ShaderMaterial.new()
+			_tint_material.shader = GLOW_TINT_SHADER
+		_tint_material.set_shader_parameter("tint", color)
+	if is_instance_valid(glow_sprite):
+		var accent_material: Material = _tint_material
+		var base_material: Material = _get_additive_material()
+		glow_sprite.material = accent_material if enabled else base_material
+	if is_instance_valid(flash_layer):
+		flash_layer.queue_redraw()
+
+
+static func _make_flash_texture(color: Color) -> GradientTexture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.25, 0.6, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 1.0, 1.0, 1.0),
+		color.lerp(Color.WHITE, 0.7),
+		Color(color.r, color.g, color.b, 0.7),
+		Color(color.r, color.g, color.b, 0.0),
+	])
+	var texture: GradientTexture2D = GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 64
+	texture.height = 64
+	return texture
 
 ## Слой для вспышки: рисует её через draw_flash, чтобы z-порядок (позади N) задавался отдельно от спрайта.
 class FlashLayer:
@@ -124,6 +172,17 @@ func _ready() -> void:
 	body_sprite.z_index = 1
 	body_sprite.vframes = 5
 	add_child(body_sprite)
+	# Тень по силуэту: тот же кадр, зеркало от ступней со сдвигом по ShadowLight.DIR.
+	# z -1: над плитой и задними барьерами, под телом солдата и передними барьерами.
+	shadow_sprite = Sprite2D.new()
+	shadow_sprite.name = "SheetShadow"
+	shadow_sprite.centered = false
+	shadow_sprite.offset = -SoldierSheetData.PIVOT
+	shadow_sprite.z_index = -1
+	shadow_sprite.vframes = 5
+	shadow_sprite.transform = ShadowLight.ground_basis()
+	shadow_sprite.modulate = Color(ShadowLight.COLOR, ShadowLight.ALPHA)
+	add_child(shadow_sprite)
 	glow_sprite = Sprite2D.new()
 	glow_sprite.name = "SheetGlow"
 	glow_sprite.centered = false
@@ -132,6 +191,8 @@ func _ready() -> void:
 	glow_sprite.vframes = 5
 	glow_sprite.material = _get_additive_material()
 	add_child(glow_sprite)
+	if _accent_on:
+		set_accent(true, _accent_color, flash_size_multiplier / maxf(_base_flash_multiplier, 0.01))
 	flash_layer = FlashLayer.new()
 	flash_layer.name = "SheetFlash"
 	flash_layer.visual = self
@@ -157,6 +218,7 @@ func set_direction(index: int) -> void:
 		return
 	body_sprite.flip_h = flip
 	glow_sprite.flip_h = flip
+	shadow_sprite.flip_h = flip
 	# Вспышка позади корпуса только у вида N (флаг behind в данных студии), иначе поверх.
 	flash_layer.z_index = 0 if is_behind() else 13
 	_update_frame()
@@ -171,6 +233,8 @@ func _set_mode(shooting: bool) -> void:
 	var columns: int = SoldierSheetData.SHOT_FRAMES if shooting else SoldierSheetData.IDLE_FRAMES
 	body_sprite.hframes = columns
 	glow_sprite.hframes = columns
+	shadow_sprite.texture = body_sprite.texture
+	shadow_sprite.hframes = columns
 	_frame = -1
 
 ## Запускает кадры отдачи; вспышка у дула рисуется параллельно.
@@ -223,6 +287,7 @@ func _update_frame() -> void:
 	var coords: Vector2i = Vector2i(frame_value, row)
 	body_sprite.frame_coords = coords
 	glow_sprite.frame_coords = coords
+	shadow_sprite.frame_coords = coords
 
 func _update_glow() -> void:
 	var pulse: float = 1.0 - glow_pulse + glow_pulse * (0.5 + 0.5 * sin(TAU * (_clock + _glow_phase) / GLOW_PULSE_PERIOD))
@@ -272,7 +337,7 @@ func draw_flash(canvas: CanvasItem) -> void:
 	var unit: float = SoldierSheetData.SHEET_SCALE * flash_size_multiplier
 	var center: Vector2 = _muzzle_sheet_px()
 	var radius: float = (44.0 * intensity + 10.0) * unit
-	canvas.draw_texture_rect(_get_flash_texture(), Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0), false, Color(1.0, 1.0, 1.0, intensity))
+	canvas.draw_texture_rect(_accent_flash_texture if _accent_on else _get_flash_texture(), Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0), false, Color(1.0, 1.0, 1.0, intensity))
 	var angle: float = deg_to_rad(float(view["an"]))
 	if flip:
 		angle = PI - angle
@@ -280,7 +345,7 @@ func draw_flash(canvas: CanvasItem) -> void:
 	var half_width: float = (4.0 * intensity + 1.0) * unit
 	canvas.draw_set_transform(center, angle, Vector2.ONE)
 	var head_color: Color = Color(1.0, 1.0, 1.0, intensity)
-	var tail_color: Color = Color(120.0 / 255.0, 220.0 / 255.0, 1.0, 0.0)
+	var tail_color: Color = Color(_accent_color.r, _accent_color.g, _accent_color.b, 0.0) if _accent_on else Color(120.0 / 255.0, 220.0 / 255.0, 1.0, 0.0)
 	canvas.draw_polygon(
 		PackedVector2Array([Vector2(0.0, -half_width), Vector2(ray_length, -half_width), Vector2(ray_length, half_width), Vector2(0.0, half_width)]),
 		PackedColorArray([head_color, tail_color, tail_color, head_color])

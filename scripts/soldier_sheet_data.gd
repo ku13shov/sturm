@@ -2,12 +2,14 @@ class_name SoldierSheetData
 extends RefCounted
 ## Сгенерировано export_soldier.py из студии. Не править руками: данные листов нового солдата.
 
-const FRAME_SIZE: Vector2i = Vector2i(128, 184)
-const PIVOT: Vector2 = Vector2(64.0, 183.0)
+const FRAME_SIZE: Vector2i = Vector2i(128, 192)
+const PIVOT: Vector2 = Vector2(64.0, 185.0)
 const IDLE_FRAMES: int = 12
 const SHOT_FRAMES: int = 8
 const IDLE_PERIOD: float = 2.2
 const SHOT_DURATION: float = 0.28
+## Отдача руки в студийных px (нужна вспышке, чтобы идти за дулом).
+const RECOIL_PX: float = 16.0
 ## Масштаб листа относительно студийного холста (1/3).
 const SHEET_SCALE: float = 0.333333
 ## Видимая высота солдата (ступни — макушка) в px листа, вид S.
@@ -23,31 +25,31 @@ const VIEWS: Array[Dictionary] = [
 	{
 		"name": "s", "behind": false, "an": 27.0,
 		"anchor": Vector2(212, 627), "head_c": Vector2(213, 145), "arms_c": Vector2(203, 308),
-		"muzzle": Vector2(361, 373), "head_shift": Vector2(-1.5, 5.5), "arms_shift": Vector2(0, -3.5),
+		"muzzle": Vector2(361, 373), "head_shift": Vector2(-1.5, 2.5), "arms_shift": Vector2(2, -5),
 		"sparks": [[213, 145, 12], [200, 308, 10], [110, 235, 5], [315, 235, 5]],
 	},
 	{
 		"name": "se", "behind": false, "an": 27.0,
 		"anchor": Vector2(208, 625), "head_c": Vector2(204, 133), "arms_c": Vector2(195, 301),
-		"muzzle": Vector2(339, 366), "head_shift": Vector2(6.5, 13.5), "arms_shift": Vector2(10.5, 3.5),
+		"muzzle": Vector2(339, 366), "head_shift": Vector2(6.5, 13.5), "arms_shift": Vector2(13, 1),
 		"sparks": [[225, 141, 12], [195, 301, 10], [110, 235, 5], [300, 235, 5]],
 	},
 	{
 		"name": "e", "behind": false, "an": 38.0,
 		"anchor": Vector2(182, 628), "head_c": Vector2(184, 142), "arms_c": Vector2(240, 312),
-		"muzzle": Vector2(365, 373), "head_shift": Vector2(-1, 1), "arms_shift": Vector2(-2, 0),
+		"muzzle": Vector2(365, 373), "head_shift": Vector2(-1, 2), "arms_shift": Vector2(-2, 0),
 		"sparks": [[224, 138, 12], [240, 312, 10], [105, 225, 5], [205, 225, 5]],
 	},
 	{
-		"name": "ne", "behind": false, "an": 23.0,
+		"name": "ne", "behind": true, "an": 23.0,
 		"anchor": Vector2(195, 629), "head_c": Vector2(190, 136), "arms_c": Vector2(213, 328),
-		"muzzle": Vector2(387, 367), "head_shift": Vector2(0, -1.5), "arms_shift": Vector2(-1.5, -3.5),
+		"muzzle": Vector2(387, 367), "head_shift": Vector2(0, -2), "arms_shift": Vector2(-0.5, -7.5),
 		"sparks": [[124, 235, 12], [294, 232, 8], [350, 355, 10], [190, 135, 4]],
 	},
 	{
 		"name": "n", "behind": true, "an": -70.0,
 		"anchor": Vector2(212, 627), "head_c": Vector2(211, 133), "arms_c": Vector2(212, 309),
-		"muzzle": Vector2(285, 195), "head_shift": Vector2(0, -2), "arms_shift": Vector2(-1.5, -10.5),
+		"muzzle": Vector2(285, 300), "head_shift": Vector2(0, -3), "arms_shift": Vector2(-1.5, -17.5),
 		"sparks": [[206, 235, 14], [349, 235, 6], [212, 309, 8], [211, 133, 4]],
 	},
 ]

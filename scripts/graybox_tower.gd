@@ -60,8 +60,13 @@ func _ready() -> void:
 	range_indicator.polygon = circle_points
 	range_indicator.visible = combat_enabled
 	health = max_health
+	health_changed.connect(_forward_health_to_visual)
 	_set_state(GrayboxBuildingState.ACTIVE)
 	health_changed.emit(health, max_health)
+
+func _forward_health_to_visual(current_health: float, maximum_health: float) -> void:
+	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("set_health"):
+		new_soldier_visual.call("set_health", current_health, maximum_health)
 
 func _hide_legacy_runtime_sprites() -> void:
 	for child: Node in get_children():
@@ -114,10 +119,14 @@ func take_damage(amount: float) -> void:
 		if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("on_hit"):
 			new_soldier_visual.call("on_hit")
 
+var _restoring := false
+
 func restore_saved_state(saved_health: float, saved_upgrade_level: int) -> void:
+	_restoring = true
 	while upgrade_level < clampi(saved_upgrade_level, 0, max_upgrade_level):
 		if not upgrade():
 			break
+	_restoring = false
 	health = clampf(saved_health, 0.0, max_health)
 	health_changed.emit(health, max_health)
 	if health < max_health and health > 0.0:
@@ -142,11 +151,11 @@ func _set_state(next_state: String) -> void:
 	building_state = next_state
 	state_changed.emit(building_state)
 	if next_state == GrayboxBuildingState.DAMAGED:
-		modulate = Color(1.0, 0.55, 0.55, 1.0)
+		modulate = Color.WHITE if use_new_soldier_visual else Color(1.0, 0.55, 0.55, 1.0)
 	elif next_state == GrayboxBuildingState.ACTIVE:
 		modulate = Color.WHITE
 	elif next_state == GrayboxBuildingState.UPGRADED:
-		modulate = Color(0.65, 0.9, 1.0, 1.0)
+		modulate = Color.WHITE if use_new_soldier_visual else Color(0.65, 0.9, 1.0, 1.0)
 
 func upgrade() -> bool:
 	if health <= 0.0 or upgrade_level >= max_upgrade_level:
@@ -168,8 +177,10 @@ func upgrade() -> bool:
 	if upgrade_level < upgrade_costs.size():
 		upgrade_cost = upgrade_costs[upgrade_level]
 	range_indicator.modulate = Color(0.25, 0.85, 1.0, 0.12)
-	upgrade_accent.visible = true
+	upgrade_accent.visible = not use_new_soldier_visual
 	_set_state(GrayboxBuildingState.UPGRADED)
+	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("set_upgrade_level"):
+		new_soldier_visual.call("set_upgrade_level", upgrade_level, not _restoring)
 	return true
 
 func _find_target() -> GrayboxBug:

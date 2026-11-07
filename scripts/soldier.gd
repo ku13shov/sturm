@@ -101,6 +101,19 @@ func on_hit() -> void:
 	if is_sheet_active():
 		sheet_visual.on_hit()
 
+## Акцентный цвет улучшенной башни: свечение деталей, вспышка, трассер и искры. enabled = false возвращает исходные цвета.
+func set_accent(enabled: bool, color: Color = Color.WHITE, flash_multiplier: float = 1.0) -> void:
+	if is_instance_valid(sheet_visual):
+		sheet_visual.set_accent(enabled, color, flash_multiplier)
+	var head: Color = color.lerp(Color.WHITE, 0.75) if enabled else tracer_head_color
+	var tail: Color = Color(color.r, color.g, color.b, 0.0) if enabled else tracer_tail_color
+	if is_instance_valid(tracer):
+		var gradient: Gradient = Gradient.new()
+		gradient.colors = PackedColorArray([head, tail])
+		tracer.gradient = gradient
+	for spark: Polygon2D in sparks:
+		spark.color = color.lerp(Color.WHITE, 0.6) if enabled else spark_color
+
 ## Смерть кодом: эффект создаётся в parent (обычно в родителе башни), после чего башню можно удалять.
 func spawn_death_fx(parent: Node) -> void:
 	if is_sheet_active():

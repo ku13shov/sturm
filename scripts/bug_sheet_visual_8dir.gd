@@ -63,7 +63,7 @@ const ROW_SECTORS: Array[Vector2] = [
 ## Запас гистерезиса при смене направления, градусы.
 @export_range(0.0, 30.0, 0.5) var view_hysteresis_degrees: float = 10.0
 
-@export var shadow_opacity: float = 0.35
+@export var shadow_opacity: float = 0.2
 @export var shadow_width_fraction: float = 1.05
 @export_range(0.0, 1.0, 0.01) var glow_base: float = 0.43
 @export_range(0.0, 1.0, 0.01) var glow_pulse: float = 0.30
@@ -79,6 +79,8 @@ const ROW_SECTORS: Array[Vector2] = [
 @onready var glow_sprite: AnimatedSprite2D = $GlowAnimatedSprite2D
 @onready var contact_shadow: Sprite2D = $ContactShadow
 
+## Тень по силуэту: те же кадры листа, что у тела, отражённые от линии земли по ShadowLight.DIR.
+var silhouette_shadow: AnimatedSprite2D
 ## true, когда лист и маска загружены и узел можно показывать.
 var available: bool = false
 var has_attack: bool = false
@@ -150,6 +152,15 @@ func _ready() -> void:
 	var sprite_offset: Vector2 = Vector2(-pivot_in_frame.x + frame_size.x * 0.5, -pivot_in_frame.y + frame_size.y * 0.5)
 	animated_sprite.offset = sprite_offset
 	glow_sprite.offset = sprite_offset
+	silhouette_shadow = AnimatedSprite2D.new()
+	silhouette_shadow.name = "SilhouetteShadow"
+	silhouette_shadow.sprite_frames = animated_sprite.sprite_frames
+	silhouette_shadow.offset = sprite_offset
+	silhouette_shadow.z_index = -1
+	silhouette_shadow.modulate = Color(ShadowLight.COLOR, ShadowLight.ALPHA)
+	add_child(silhouette_shadow)
+	move_child(silhouette_shadow, contact_shadow.get_index() + 1)
+	silhouette_shadow.pause()
 	var scale_factor: float = _sprite_scale()
 	animated_sprite.scale = Vector2.ONE * scale_factor
 	glow_sprite.scale = Vector2.ONE * scale_factor
@@ -222,6 +233,18 @@ func _resolve_row(velocity_now: Vector2) -> void:
 		_set_row(new_row, flip)
 
 func _process(delta: float) -> void:
+	_process_visual(delta)
+	_sync_silhouette_shadow()
+
+func _sync_silhouette_shadow() -> void:
+	if silhouette_shadow == null:
+		return
+	if silhouette_shadow.animation != animated_sprite.animation:
+		silhouette_shadow.animation = animated_sprite.animation
+	silhouette_shadow.flip_h = animated_sprite.flip_h
+	silhouette_shadow.frame = animated_sprite.frame
+
+func _process_visual(delta: float) -> void:
 	if not available:
 		return
 	var bug: GrayboxBug = get_parent() as GrayboxBug
@@ -319,6 +342,7 @@ func _process_action(delta: float, bug: GrayboxBug) -> void:
 	_show_action_frame(int(floor(progress * total)), total)
 	if is_death:
 		contact_shadow.modulate.a = 1.0 - smoothstep(0.55, 1.0, progress)
+		silhouette_shadow.modulate.a = ShadowLight.ALPHA * (1.0 - smoothstep(0.55, 1.0, progress))
 		if progress >= 1.0 and not death_emitted:
 			death_emitted = true
 			death_finished.emit()
@@ -356,6 +380,10 @@ func _apply_glow(time_seconds: float) -> void:
 	glow_sprite.modulate = Color(glow_color.r, glow_color.g, glow_color.b, intensity)
 
 func _apply_shadow() -> void:
+	if silhouette_shadow != null:
+		var ground: Transform2D = ShadowLight.ground_basis()
+		var factor: float = _sprite_scale()
+		silhouette_shadow.transform = Transform2D(ground.x * factor, ground.y * factor, Vector2.ZERO)
 	var shadow_width_px: float = bug_visual_height_px * shadow_width_fraction * unit_scale_mult
 	var shadow_height_px: float = shadow_width_px * 0.4
 	var texture_size: Vector2 = contact_shadow.texture.get_size()
