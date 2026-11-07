@@ -31,12 +31,16 @@ const PAD_MARKS: Array[Vector2] = [Vector2(192.0, 46.0), Vector2(288.0, 104.0), 
 @export var upgrade_accent_color: Color = Color(1.0, 0.6, 0.12)
 ## Во сколько раз вспышка выстрела крупнее базовой на улучшенной башне.
 @export_range(1.0, 2.0, 0.05) var upgrade_flash_multiplier: float = 1.25
+## С какого уровня апгрейда вместо тумбы с солдатами стоит бункер: 2 = третий уровень.
+@export_range(0, 4) var bunker_upgrade_level: int = 2
 @export var debug_cell_diamond: bool = false
 @export var debug_muzzle_points: bool = false
 @export_range(0.0, 0.08, 0.005) var soldier_shot_delay_max: float = 0.08
 
 var soldiers: Array[Soldier] = []
 var pad_fx: SoldierPadFx
+var bunker: BunkerTower
+var _health_ratio: float = 1.0
 @onready var pad: SoldierPad = $Pad
 @onready var ground_shadow: GroundShadow = $GroundShadow
 
@@ -71,13 +75,22 @@ func _ready() -> void:
 		call_deferred("_ready_screen_report")
 	queue_redraw()
 
+func _bunker_active() -> bool:
+	return is_instance_valid(bunker) and bunker.visible and bunker.available
+
 func set_target(world_pos: Vector2) -> void:
+	if _bunker_active():
+		bunker.set_target(world_pos)
+		return
 	var screen_vector: Vector2 = world_pos - global_position
 	for soldier: Soldier in soldiers:
 		if is_instance_valid(soldier):
 			soldier.face_screen_vector(screen_vector)
 
 func play_shot(target_global_position: Vector2) -> void:
+	if _bunker_active():
+		bunker.play_shot(target_global_position)
+		return
 	if not use_new_soldier_visual:
 		return
 	for soldier: Soldier in soldiers:
@@ -87,6 +100,9 @@ func play_shot(target_global_position: Vector2) -> void:
 
 ## Вспышка попадания по всем солдатам башни (листовой визуал).
 func on_hit() -> void:
+	if _bunker_active():
+		bunker.on_hit()
+		return
 	pad.flash_hit()
 	for soldier: Soldier in soldiers:
 		if is_instance_valid(soldier):
@@ -94,8 +110,12 @@ func on_hit() -> void:
 
 ## Здоровье башни для цвета полосок тумбы: голубой, жёлтый, красный.
 func set_health(current_health: float, maximum_health: float) -> void:
+	if maximum_health > 0.0:
+		_health_ratio = current_health / maximum_health
 	if is_instance_valid(pad) and maximum_health > 0.0:
-		pad.health_ratio = current_health / maximum_health
+		pad.health_ratio = _health_ratio
+	if is_instance_valid(bunker):
+		bunker.health_ratio = _health_ratio
 
 ## Уровень апгрейда башни (0 = базовая). Барьеры тумбы показываются только на barrier_upgrade_level.
 ## Улучшенный вид солдат (со второго уровня апгрейда): другой оттенок свечения деталей, вспышки,
@@ -108,6 +128,9 @@ func _apply_upgrade_style(level: int) -> void:
 
 
 func set_upgrade_level(level: int, animate := true) -> void:
+	if use_new_soldier_visual and level >= bunker_upgrade_level and _ensure_bunker():
+		_show_bunker(animate)
+		return
 	_apply_upgrade_style(level)
 	if is_instance_valid(pad):
 		var was: bool = pad.barriers_enabled
@@ -115,8 +138,40 @@ func set_upgrade_level(level: int, animate := true) -> void:
 		if animate and use_pad_fx and pad.barriers_enabled and not was:
 			pad.play_barrier_appear()
 
+## Создаёт бункер при первой необходимости. false = текстур нет, остаётся тумба с солдатами.
+func _ensure_bunker() -> bool:
+	if is_instance_valid(bunker):
+		return bunker.available
+	if not BunkerTower.assets_available():
+		push_warning("SoldiersTower: нет текстур бункера, остаётся тумба с солдатами")
+		return false
+	bunker = BunkerTower.new()
+	bunker.name = "Bunker"
+	bunker.visible = false
+	add_child(bunker)
+	bunker.set_art_scale(pad.scale)
+	bunker.set_accent(upgrade_accent_color)
+	bunker.health_ratio = _health_ratio
+	return bunker.available
+
+## Тумба и солдаты уходят, бункер появляется (с анимацией падения сверху, как барьеры).
+func _show_bunker(animate: bool) -> void:
+	if is_instance_valid(pad):
+		pad.barriers_enabled = false
+		pad.visible = false
+	for soldier: Soldier in soldiers:
+		if is_instance_valid(soldier):
+			soldier.visible = false
+	var was_visible: bool = bunker.visible
+	bunker.visible = true
+	if animate and use_pad_fx and not was_visible:
+		bunker.play_appear()
+
 ## Смерть башни: эффекты солдат создаются в parent, после чего башню можно сразу удалять.
 func spawn_death_fx(parent: Node) -> void:
+	if _bunker_active():
+		bunker.detach_and_destroy(parent)
+		return
 	pad.detach_and_destroy(parent)
 	for soldier: Soldier in soldiers:
 		if is_instance_valid(soldier):

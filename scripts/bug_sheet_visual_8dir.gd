@@ -118,6 +118,8 @@ func set_visual_height_px(value: float) -> void:
 		_apply_shadow()
 
 func _ready() -> void:
+	# Мягкий эллипс заменён тенью по силуэту; узел оставлен, чтобы не трогать остальные ссылки.
+	contact_shadow.visible = false
 	# Материал из сцены общий для всех экземпляров: без копии вспышка попадания зажигает всех жуков сразу.
 	if animated_sprite != null and animated_sprite.material != null:
 		animated_sprite.material = animated_sprite.material.duplicate()
