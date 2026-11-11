@@ -67,11 +67,12 @@ const HELP_PAGES: Array[Dictionary] = [
 Текст перенесён из доступных страниц справки оригинала. Неописанные здания не дополнены догадками."""}
 ]
 
-@onready var title_label: Label = $Center/Panel/ChapterTitle
-@onready var text_label: RichTextLabel = $Center/Panel/PageText
-@onready var previous_button: Button = $Center/Panel/PreviousButton
-@onready var next_button: Button = $Center/Panel/NextButton
-@onready var back_button: Button = $Center/Panel/BackButton
+@onready var heading_label: Label = $Margin/Layout/Heading
+@onready var title_label: Label = $Margin/Layout/Panel/Content/ChapterTitle
+@onready var text_label: RichTextLabel = $Margin/Layout/Panel/Content/PageText
+@onready var previous_button: Button = $Margin/Layout/NavRow/PreviousButton
+@onready var next_button: Button = $Margin/Layout/NavRow/NextButton
+@onready var back_button: Button = $Margin/Layout/BackButton
 var page_index: int = 0
 
 func _ready() -> void:
@@ -93,7 +94,8 @@ func _refresh_page() -> void:
 	title_label.text = str(page["title"])
 	text_label.clear()
 	text_label.append_text(str(page["text"]))
-	$Center/Panel/Heading.text = "СПРАВКА • %d / %d" % [page_index + 1, HELP_PAGES.size()]
+	text_label.scroll_to_line(0)
+	heading_label.text = "СПРАВКА • %d / %d" % [page_index + 1, HELP_PAGES.size()]
 
 func _return_to_menu() -> void:
 	get_tree().change_scene_to_file(START_MENU_SCENE)

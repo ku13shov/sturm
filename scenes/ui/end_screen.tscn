@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/end_screen.gd" id="1_end_screen"]
+[ext_resource type="Theme" path="res://assets/ui/mars_theme.tres" id="2_theme"]
+
+[node name="EndScreen" type="Control"]
+visible = false
+process_mode = 3
+mouse_filter = 0
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_end_screen")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.03, 0.008, 0.004, 0.8)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+
+[node name="Box" type="VBoxContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Card/Box"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 30
+text = "ПОБЕДА"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Card/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.62, 0.45, 1)
+theme_override_font_sizes/font_size = 14
+text = "Все атаки отражены"
+horizontal_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="Center/Card/Box"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0.62, 0.34, 0.15, 0.7)
+
+[node name="Rows" type="GridContainer" parent="Center/Card/Box"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 7
+columns = 2
+
+[node name="RestartButton" type="Button" parent="Center/Card/Box"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "ИГРАТЬ СНОВА"
+
+[node name="MenuButton" type="Button" parent="Center/Card/Box"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "В ГЛАВНОЕ МЕНЮ"

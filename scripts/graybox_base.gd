@@ -9,6 +9,8 @@ signal destroyed
 @export var max_health: float = 750.0
 @export var defense: float = 25.0
 @export var temporary_balance_status: String = "SCREENSHOT_CONFIRMED"
+## Где над основанием базы висит ключ ремонта (локальные координаты).
+@export var repair_fx_offset := Vector2(0.0, -80.0)
 
 var profile: Dictionary = {}
 var health: float = 0.0
@@ -16,7 +18,16 @@ var building_state: String = GrayboxBuildingState.BUILT
 var shield_points: float = 0.0
 var invulnerability_until: float = 0.0
 
+## Ширина и сдвиг вытоптанного пятна под базой, px.
+@export var ground_decal_width_px: float = 340.0
+@export var ground_decal_offset := Vector2(6.0, 48.0)
+
 func _ready() -> void:
+	var decal: GroundDecal = GroundDecal.new()
+	decal.width_px = ground_decal_width_px
+	decal.position = ground_decal_offset
+	add_child(decal)
+	move_child(decal, 0)
 	add_to_group("graybox_base")
 	profile = GameBalance.BUILDINGS.get(building_id, GameBalance.BUILDINGS[155])
 	health = max_health
@@ -56,6 +67,7 @@ func repair_by(amount: float) -> void:
 	if amount <= 0.0 or health <= 0.0:
 		return
 	health = minf(health + amount, max_health)
+	RepairFx.pulse(self, repair_fx_offset)
 	if health >= max_health:
 		_set_state(GrayboxBuildingState.ACTIVE)
 	health_changed.emit(health, max_health)

@@ -43,6 +43,8 @@ const APPEAR_LAMP_TIME := 0.4
 @export var idle_color := Color("#00e5ff")
 @export var warn_color := Color("#ffbb00")
 @export var crit_color := Color("#ff0000")
+## Цвет полосок, пока идёт ремонт.
+@export var repair_color := Color("#3dff8f")
 @export var pulse_speed := 1.0
 @export var glow_strength := 2.0
 ## Множитель яркости полосок на повреждённом и критическом состоянии.
@@ -112,6 +114,8 @@ var _tex: Array[Texture2D] = []
 var _mask: Array[Texture2D] = []
 var _art: Node2D
 var _back_layer: Node2D
+var _repair_t := 0.0
+var _repair_k := 0.0
 var _base_scale := Vector2.ONE
 var _body: Sprite2D
 var _prev: Sprite2D
@@ -395,6 +399,13 @@ func play_shot(target_global_position: Vector2) -> void:
 		get_tree().create_timer(delay).timeout.connect(_fire_gun.bind(idx, target_global_position), CONNECT_ONE_SHOT)
 
 
+## Ремонт идёт: полоски становятся зелёными и бьются чаще. Вызывается при каждом росте HP, гаснет через 0.5 c.
+func on_repair() -> void:
+	if _state != State.ALIVE:
+		return
+	_repair_t = 0.5
+
+
 func on_hit() -> void:
 	if _state != State.ALIVE:
 		return
@@ -516,6 +527,8 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	_flash = maxf(0.0, _flash - delta * 3.0)
+	_repair_t = maxf(0.0, _repair_t - delta)
+	_repair_k = move_toward(_repair_k, 1.0 if _repair_t > 0.0 else 0.0, delta * 5.0)
 	_shake = maxf(0.0, _shake - delta * 14.0)
 	_prev_a = maxf(0.0, _prev_a - delta * 3.0)
 	_prev.visible = _prev_a > 0.0

@@ -18,6 +18,8 @@ signal destroyed
 @export var use_new_soldier_visual: bool = false
 @export var use_legacy_tracer: bool = false
 @export var temporary_balance_status: String = "TEMPORARY_BALANCE"
+## Где над основанием башни висит ключ ремонта (локальные координаты). Для башни выше/ниже поменять в инспекторе.
+@export var repair_fx_offset := Vector2(0.0, -64.0)
 
 var profile: Dictionary = {}
 var upgrade_costs: Array[int] = []
@@ -28,13 +30,36 @@ var building_state: String = GrayboxBuildingState.BUILT
 var cooldown: float = 0.0
 var shot_timer: float = 0.0
 
+const RANGE_FILL_COLOR: Color = Color(0.25, 0.85, 1.0, 0.2)
+var range_visible: bool = false
+
 @onready var shot_line: Line2D = $ShotLine
 @onready var range_indicator: Polygon2D = $RangeIndicator
 @onready var upgrade_accent: Polygon2D = $UpgradeAccent
 @onready var new_soldier_visual: Node = get_node_or_null("SoldierVisual")
 @onready var legacy_soldier_sprite: CanvasItem = get_node_or_null("SoldierSprite") as CanvasItem
 
+## Тёмное вытоптанное пятно земли под башней солдат; появляется вместе со стройкой.
+var ground_decal: GroundDecal
+## Ширина пятна относительно ширины клетки башни.
+const GROUND_DECAL_WIDTH_OF_CELL: float = 1.3
+
+func _add_ground_decal() -> void:
+	ground_decal = GroundDecal.new()
+	var cell_width: float = 96.0
+	if is_instance_valid(new_soldier_visual):
+		var visual_width: Variant = new_soldier_visual.get("cell_diamond_width_px")
+		if visual_width is float:
+			cell_width = visual_width
+	ground_decal.width_px = cell_width * GROUND_DECAL_WIDTH_OF_CELL
+	ground_decal.position = Vector2(0.0, 4.0)
+	ground_decal.z_index = -4
+	add_child(ground_decal)
+	move_child(ground_decal, 0)
+
 func _ready() -> void:
+	if use_new_soldier_visual:
+		_add_ground_decal()
 	if use_new_soldier_visual and is_instance_valid(legacy_soldier_sprite):
 		legacy_soldier_sprite.visible = false
 	if is_instance_valid(new_soldier_visual):
@@ -58,11 +83,25 @@ func _ready() -> void:
 		var angle: float = TAU * float(index) / 32.0
 		circle_points.append(Vector2(cos(angle), sin(angle)) * attack_range)
 	range_indicator.polygon = circle_points
-	range_indicator.visible = combat_enabled
+	range_indicator.visible = false
 	health = max_health
 	health_changed.connect(_forward_health_to_visual)
 	_set_state(GrayboxBuildingState.ACTIVE)
 	health_changed.emit(health, max_health)
+
+## Радиус атаки виден только у выбранной башни: полупрозрачная заливка, пересчитанная по текущему attack_range.
+func set_range_visible(shown: bool) -> void:
+	range_visible = shown and combat_enabled
+	range_indicator.visible = range_visible
+	if not range_visible:
+		return
+	var points: PackedVector2Array = PackedVector2Array()
+	for index: int in range(64):
+		var angle: float = TAU * float(index) / 64.0
+		points.append(Vector2(cos(angle), sin(angle)) * attack_range)
+	range_indicator.polygon = points
+	range_indicator.color = Color.WHITE
+	range_indicator.modulate = RANGE_FILL_COLOR
 
 func _forward_health_to_visual(current_health: float, maximum_health: float) -> void:
 	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("set_health"):
@@ -136,6 +175,9 @@ func repair_by(amount: float) -> void:
 	if amount <= 0.0 or health <= 0.0:
 		return
 	health = minf(health + amount, max_health)
+	RepairFx.pulse(self, repair_fx_offset)
+	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("on_repair"):
+		new_soldier_visual.call("on_repair")
 	if health >= max_health:
 		_set_state(GrayboxBuildingState.ACTIVE)
 	health_changed.emit(health, max_health)
@@ -176,7 +218,8 @@ func upgrade() -> bool:
 	fire_interval *= 0.8
 	if upgrade_level < upgrade_costs.size():
 		upgrade_cost = upgrade_costs[upgrade_level]
-	range_indicator.modulate = Color(0.25, 0.85, 1.0, 0.12)
+	if range_visible:
+		set_range_visible(true)
 	upgrade_accent.visible = not use_new_soldier_visual
 	_set_state(GrayboxBuildingState.UPGRADED)
 	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("set_upgrade_level"):

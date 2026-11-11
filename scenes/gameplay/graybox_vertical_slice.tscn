@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://d2xxhny5one0w" path="res://scripts/map_decoration_layer.gd" id="13_map_decorations"]
 [ext_resource type="Shader" uid="uid://cso67seba5p8w" path="res://shaders/fog_edge_fade.gdshader" id="14_fog_shader"]
 [ext_resource type="Shader" uid="uid://b4tk5qo1uy6mr" path="res://shaders/fog_of_war_mask.gdshader" id="15_fog_mask_shader"]
+[ext_resource type="Theme" path="res://assets/ui/mars_theme.tres" id="16_theme"]
 
 [sub_resource type="StyleBoxFlat" id="PlayfieldStyle"]
 bg_color = Color(0.82, 0.28, 0.09, 1)
@@ -30,6 +31,18 @@ shader_parameter/map_offset = Vector2(0, 0)
 shader_parameter/viewport_size = Vector2(432, 470)
 shader_parameter/map_zoom = 1.0
 shader_parameter/enabled = 1.0
+
+[sub_resource type="StyleBoxFlat" id="SelectionPanelStyle"]
+bg_color = Color(0.045, 0.027, 0.018, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.58, 0.22, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="SelectionHpBackground"]
 bg_color = Color(0.12, 0.08, 0.06, 1)
@@ -77,6 +90,7 @@ offset_top = 104.0
 offset_right = 432.0
 offset_bottom = 574.0
 mouse_filter = 2
+theme = ExtResource("16_theme")
 theme_override_styles/panel = SubResource("PlayfieldStyle")
 
 [node name="Entities" type="Node2D" parent="Playfield" unique_id=260847987]
@@ -124,15 +138,15 @@ offset_right = 432.0
 offset_bottom = 768.0
 mouse_filter = 2
 
-[node name="RetroTopStrip" type="ColorRect" parent="Playfield" unique_id=532861886]
+[node name="RetroTopStrip" type="Panel" parent="Playfield" unique_id=532861886]
 z_index = 20
 layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 416.0
-offset_bottom = 80.0
+offset_left = 76.0
+offset_top = 50.0
+offset_right = 426.0
+offset_bottom = 114.0
 mouse_filter = 2
-color = Color(0.82, 0.72, 0.52, 1)
+theme_override_styles/panel = SubResource("SelectionPanelStyle")
 
 [node name="SelectionIcon" type="TextureRect" parent="Playfield/RetroTopStrip" unique_id=839497366]
 z_index = 20
@@ -180,11 +194,11 @@ theme_override_colors/font_color = Color(1, 0.9, 0.72, 1)
 theme_override_font_sizes/font_size = 14
 text = "ОЖ: 750   О: 25"
 
-[node name="CreditsBadge" type="ColorRect" parent="Playfield" unique_id=1406670344]
+[node name="CreditsBadge" type="Panel" parent="Playfield" unique_id=1406670344]
 z_index = 8
 layout_mode = 0
 mouse_filter = 2
-color = Color(0.02, 0.015, 0.01, 0.92)
+theme_override_styles/panel = SubResource("SelectionPanelStyle")
 
 [node name="CreditsText" type="Label" parent="Playfield/CreditsBadge" unique_id=477666830]
 z_index = 5
@@ -418,6 +432,7 @@ offset_top = 720.0
 offset_right = 112.0
 offset_bottom = 760.0
 mouse_filter = 1
+theme = ExtResource("16_theme")
 theme_override_font_sizes/font_size = 16
 text = "ПАУЗА"
 
@@ -428,6 +443,7 @@ offset_top = 720.0
 offset_right = 424.0
 offset_bottom = 760.0
 mouse_filter = 1
+theme = ExtResource("16_theme")
 theme_override_font_sizes/font_size = 14
 text = "ДЕЙСТВИЯ"
 
@@ -439,6 +455,7 @@ offset_top = 720.0
 offset_right = 272.0
 offset_bottom = 760.0
 mouse_filter = 1
+theme = ExtResource("16_theme")
 theme_override_font_sizes/font_size = 14
 text = "ОТМЕНА"
 
@@ -452,6 +469,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("16_theme")
 
 [node name="Dim" type="ColorRect" parent="ProgressionNotice" unique_id=365541989]
 layout_mode = 1

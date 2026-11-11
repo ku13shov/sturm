@@ -98,6 +98,13 @@ func play_shot(target_global_position: Vector2) -> void:
 			var delay: float = randf_range(0.0, soldier_shot_delay_max)
 			get_tree().create_timer(delay).timeout.connect(soldier.play_shot.bind(target_global_position), CONNECT_ONE_SHOT)
 
+## Ремонт: общие «+» и искры рисует RepairFx на самой башне, а полоски (тумбы, барьеров или бункера) переключаются на зелёный.
+func on_repair() -> void:
+	if _bunker_active():
+		bunker.on_repair()
+		return
+	pad.on_repair()
+
 ## Вспышка попадания по всем солдатам башни (листовой визуал).
 func on_hit() -> void:
 	if _bunker_active():

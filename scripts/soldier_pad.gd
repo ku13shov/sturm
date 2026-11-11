@@ -13,6 +13,8 @@ enum State { ALIVE, SHORT, COLLAPSE, DEAD }
 @export var idle_color := Color("#00e5ff")
 @export var warn_color := Color("#ffbb00")
 @export var crit_color := Color("#ff0000")
+## Цвет полосок, пока идёт ремонт.
+@export var repair_color := Color("#3dff8f")
 @export var pulse_speed := 1.0
 @export var glow_strength := 2.0
 ## Множитель яркости полосок (и свечения) в состояниях «ранен» и «критично». 1 = как в покое.
@@ -66,6 +68,8 @@ var _state := State.ALIVE
 var _t := 0.0
 var _pt := 0.0
 var _flash := 0.0
+var _repair_t := 0.0
+var _repair_k := 0.0
 var _shake := 0.0
 var _sprites := {}
 var _rest := {}
@@ -452,6 +456,14 @@ func _update_piece_shadow(info: Dictionary) -> void:
 	shadow.transform = bx * ground
 
 
+## Ремонт идёт: полоски тумбы и барьеров становятся зелёными и бьются чаще. Вызывается при каждом росте HP,
+## гаснет через 0.5 c после последнего вызова.
+func on_repair() -> void:
+	if _state != State.ALIVE:
+		return
+	_repair_t = 0.5
+
+
 ## Только визуал попадания (вспышка и дрожь), здоровье не трогает: им управляет башня.
 func flash_hit() -> void:
 	if _state != State.ALIVE:
@@ -543,6 +555,8 @@ func _process(delta: float) -> void:
 		_apply_lamp(_lamp_alive())
 		return
 	_flash = maxf(0.0, _flash - delta * 3.0)
+	_repair_t = maxf(0.0, _repair_t - delta)
+	_repair_k = move_toward(_repair_k, 1.0 if _repair_t > 0.0 else 0.0, delta * 5.0)
 	_shake = maxf(0.0, _shake - delta * 14.0)
 	_update_sparks(delta, _state == State.SHORT)
 	match _state:

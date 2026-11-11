@@ -35,6 +35,11 @@ const SMALL_PAD_TEXTURE: Texture2D = preload("res://original/147.png")
 const LARGE_PAD_TEXTURE: Texture2D = preload("res://original/148.png")
 const SMALL_CONSTRUCTION_TIME: float = 2.0
 const LARGE_CONSTRUCTION_TIME: float = 3.0
+const END_SCREEN_SCENE: PackedScene = preload("res://scenes/ui/end_screen.tscn")
+## Пауза между гибелью базы / последнего жука и экраном итогов — чтобы успеть это увидеть.
+const END_SCREEN_DELAY: float = 2.0
+## Сколько убитых жуков нужно для звания 0, 1, 2, 3.
+const RANK_THRESHOLDS: Array[int] = [0, 10, 18, 43]
 
 @onready var base: GrayboxBase = $Playfield/Entities/CentralBase
 @onready var towers: Node2D = $Playfield/Entities/Towers
@@ -108,8 +113,8 @@ var fog_mask_texture: ImageTexture
 var fog_mask_rebuild_cooldown: float = 0.0
 
 @onready var pause_menu: Control = $PauseMenu
-@onready var pause_menu_status: Label = $PauseMenu/Card/Status
-@onready var pause_stats: Label = $PauseMenu/Card/Stats
+@onready var pause_menu_status: Label = $PauseMenu/Center/Card/Box/Status
+@onready var pause_stats: Label = $PauseMenu/Center/Card/Box/Stats
 @onready var commander_intro: Control = $CommanderIntro
 @onready var intro_confirm_button: Button = $CommanderIntro/Dialog/ConfirmButton
 @onready var build_palette_popup: Control = $BuildPalettePopup
@@ -127,6 +132,12 @@ var enemy_kills: int = 0
 var survival_started_at: int = 0
 var spawn_counter: int = 0
 var game_over: bool = false
+## Статистика забега для экрана итогов.
+var play_time: float = 0.0
+var towers_built: int = 0
+var towers_lost: int = 0
+var end_screen_pending: bool = false
+var end_screen: EndScreen
 var selected_building_id: int = SOLDIERS_ID
 var selected_tower: GrayboxTower
 var base_selected: bool = false
@@ -238,6 +249,9 @@ func _capture_save_data() -> Dictionary:
 		"enemy_kills": enemy_kills,
 		"experience": experience,
 		"rank": rank,
+		"play_time": play_time,
+		"towers_built": towers_built,
+		"towers_lost": towers_lost,
 		"base_upgrade_level": base_upgrade_level,
 		"base_health": base.health,
 		"base_defense": base.defense,
@@ -255,6 +269,9 @@ func _capture_save_data() -> Dictionary:
 	return save_data
 
 func _save_game() -> void:
+	# Забег закончен — прежнее сохранение остаётся как есть и не перезаписывается.
+	if game_over:
+		return
 	var save_data: Dictionary = _capture_save_data()
 	var save_file: FileAccess = FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
 	if save_file == null:
@@ -395,8 +412,11 @@ func _apply_save_data(save_data: Dictionary) -> void:
 	credits = clampi(int(save_data.get("credits", credits)), 0, 999999999)
 	score = maxi(int(save_data.get("score", score)), 0)
 	enemy_kills = maxi(int(save_data.get("enemy_kills", score)), 0)
+	play_time = maxf(float(save_data.get("play_time", 0.0)), 0.0)
+	towers_built = maxi(int(save_data.get("towers_built", 0)), 0)
+	towers_lost = maxi(int(save_data.get("towers_lost", 0)), 0)
 	rank = clampi(int(save_data.get("rank", rank)), 0, 12)
-	experience = clampi(int(save_data.get("experience", experience)), 0, maxi((rank + 1) * 5 - 1, 0))
+	experience = enemy_kills
 	base_upgrade_level = clampi(int(save_data.get("base_upgrade_level", base_upgrade_level)), 1, 4)
 	base.defense = maxf(float(save_data.get("base_defense", base.defense)), 0.0)
 	base.health = clampf(float(save_data.get("base_health", base.health)), 1.0, base.max_health)
@@ -689,9 +709,9 @@ func _ready() -> void:
 	$HUD/UpgradeButton.text = "УЛУЧШИТЬ"
 	$HUD/RepairButton.text = "РЕМОНТ"
 	$HUD/SellButton.text = "ПРОДАТЬ"
-	$PauseMenu/Card/SaveButton.pressed.connect(_on_pause_save_pressed)
-	$PauseMenu/Card/ContinueButton.pressed.connect(_on_pause_continue_pressed)
-	$PauseMenu/Card/MenuButton.pressed.connect(_on_pause_menu_pressed)
+	$PauseMenu/Center/Card/Box/SaveButton.pressed.connect(_on_pause_save_pressed)
+	$PauseMenu/Center/Card/Box/ContinueButton.pressed.connect(_on_pause_continue_pressed)
+	$PauseMenu/Center/Card/Box/MenuButton.pressed.connect(_on_pause_menu_pressed)
 	intro_confirm_button.pressed.connect(_on_intro_confirmed)
 	palette_picker.clear()
 	for building_id: int in BUILD_PALETTE_SUPPORTED_IDS:
@@ -755,7 +775,9 @@ func _ready() -> void:
 		intro_pending = false
 		commander_intro.visible = false
 		_load_game()
-		wave_manager.start()
+		# После успешной загрузки волны уже восстановлены; start() запускаем только если сохранения не было.
+		if not wave_manager.running and not wave_manager.finished:
+			wave_manager.start()
 	else:
 		intro_pending = true
 		commander_intro.visible = true
@@ -1120,6 +1142,7 @@ func _update_minimap() -> void:
 func _start_construction(tower: GrayboxTower, is_upgrade: bool = false) -> void:
 	var large_building: bool = tower.building_id == ENERGY_STATION_ID
 	tower.combat_enabled = false
+	repair_states.erase(tower)
 	var construction_visual: Sprite2D = Sprite2D.new()
 	construction_visual.texture = LARGE_CONSTRUCTION_TEXTURE if large_building else SMALL_CONSTRUCTION_TEXTURE
 	construction_visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1143,7 +1166,7 @@ func _start_construction(tower: GrayboxTower, is_upgrade: bool = false) -> void:
 	tower.add_child(progress_bar)
 	var original_visibility: Dictionary = {}
 	for child: Node in tower.get_children():
-		if child != construction_visual and child != pad_visual and child != progress_bar:
+		if child != construction_visual and child != pad_visual and child != progress_bar and not child is GroundDecal:
 			if child is CanvasItem:
 				original_visibility[child.name] = (child as CanvasItem).visible
 				(child as CanvasItem).visible = false
@@ -1151,6 +1174,8 @@ func _start_construction(tower: GrayboxTower, is_upgrade: bool = false) -> void:
 	var default_duration: float = LARGE_CONSTRUCTION_TIME if large_building else SMALL_CONSTRUCTION_TIME
 	var duration_key: String = "upgrade_time" if is_upgrade else "construction_time"
 	var duration: float = float(profile.get(duration_key, default_duration))
+	if not is_upgrade and is_instance_valid(tower.ground_decal):
+		tower.ground_decal.appear(duration)
 	construction_states[tower] = {"elapsed": 0.0, "duration": duration, "visual": construction_visual, "pad": pad_visual, "progress": progress_bar, "original_visibility": original_visibility, "is_upgrade": is_upgrade}
 	_update_hud("Модернизация началась" if is_upgrade else "Строительство началось")
 
@@ -1161,6 +1186,9 @@ func _process_repairs(delta: float) -> void:
 			repair_states.erase(target_key)
 			continue
 		var target: Node = target_key as Node
+		if construction_states.has(target):
+			repair_states.erase(target)
+			continue
 		if credits <= 0:
 			completed.append(target)
 			continue
@@ -1207,7 +1235,7 @@ func _process_construction(delta: float) -> void:
 			progress_node.queue_free()
 			var original_visibility: Dictionary = state["original_visibility"] as Dictionary
 			for child: Node in tower.get_children():
-				if child != pad_visual and child != construction_visual and child != progress_node and child is CanvasItem:
+				if child != pad_visual and child != construction_visual and child != progress_node and not child is GroundDecal and child is CanvasItem:
 					(child as CanvasItem).visible = bool(original_visibility.get(child.name, true))
 			var is_upgrade: bool = bool(state.get("is_upgrade", false))
 			if is_upgrade:
@@ -1298,6 +1326,8 @@ func _process(_delta: float) -> void:
 		fps_label.add_theme_font_size_override("font_size", 12)
 		minimap_control.add_child(fps_label)
 	fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
+	if not game_over and not game_paused and not intro_pending:
+		play_time += _delta
 	_process_construction(_delta)
 	_process_repairs(_delta)
 	if is_instance_valid(fog_mask) and playfield.size.x > 0.0 and playfield.size.y > 0.0:
@@ -1312,9 +1342,6 @@ func _process(_delta: float) -> void:
 			var fog: ColorRect = get_node("Playfield/" + fog_name) as ColorRect
 			fog.color.a = 0.72
 		action_active_until = 0.0
-	if Input.is_action_just_pressed("ui_cancel") and game_over:
-		get_tree().paused = false
-		get_tree().reload_current_scene()
 	credits_label.text = "Расходы / ресурсы  %d $" % credits
 	credits_text.text = "$%d" % credits
 	wave_label.text = "Атака  %d / %d" % [wave_manager.wave_number, wave_manager.wave_counts.size()]
@@ -1362,20 +1389,16 @@ func _refresh_progression_ui() -> void:
 	research_button.text = ("Изучено" if researched.has(selected_research) else ("Нужна энергостанция" if not research_available else "Исследовать"))
 	var research_state: String = "исследовано" if researched.has(selected_research) else ("построй энергостанцию для исследований" if not research_available else "исследование доступно")
 	if not $Playfield/ContextPanel.visible:
-		context_hint.text = "Ранг %d • Опыт %d/%d • Действие: %d • %s" % [rank, experience, (rank + 1) * 5, int(action_charges.get(selected_id, 0)), research_state]
+		context_hint.text = "Ранг %d • Опыт %s • Действие: %d • %s" % [rank, _experience_text(), int(action_charges.get(selected_id, 0)), research_state]
 
 func _grant_experience(amount: int) -> void:
 	enemy_kills += maxi(amount, 0)
 	experience = enemy_kills
 	var previous_rank: int = rank
-	if enemy_kills >= 43:
-		rank = 3
-	elif enemy_kills >= 18:
-		rank = 2
-	elif enemy_kills >= 10:
-		rank = 1
-	else:
-		rank = 0
+	rank = 0
+	for rank_index: int in range(RANK_THRESHOLDS.size()):
+		if enemy_kills >= RANK_THRESHOLDS[rank_index]:
+			rank = rank_index
 	for unlocked_id: int in range(1, rank + 1):
 		if not unlocked_action_ids.has(unlocked_id):
 			unlocked_action_ids.append(unlocked_id)
@@ -1438,11 +1461,15 @@ func _on_use_action_pressed() -> void:
 			_set_fog_revealed(4.0)
 			_update_hud("Разведывательный полёт: поле раскрыто")
 		"2":
-			if base_selected:
-				base.repair_full()
-			elif is_instance_valid(selected_tower):
-				selected_tower.repair_full()
-			_update_hud("Быстрый ремонт применён")
+			if not base_selected and is_instance_valid(selected_tower) and construction_states.has(selected_tower):
+				action_charges[action_id] = int(action_charges.get(action_id, 0)) + 1
+				_update_hud("Быстрый ремонт недоступен во время модернизации")
+			else:
+				if base_selected:
+					base.repair_full()
+				elif is_instance_valid(selected_tower):
+					selected_tower.repair_full()
+				_update_hud("Быстрый ремонт применён")
 		"3":
 			if is_instance_valid(enemy):
 				enemy.take_typed_damage(120.0, "fire")
@@ -1549,6 +1576,7 @@ func _show_next_notice() -> void:
 		return
 	notice_open = true
 	progression_notice.visible = true
+	_fit_overlay_to_screen(progression_notice)
 	notice_message.text = notice_queue.pop_front()
 	get_tree().paused = true
 
@@ -1562,17 +1590,19 @@ func _toggle_pause() -> void:
 func _set_game_paused(value: bool) -> void:
 	if intro_pending and value:
 		return
+	if game_over and value:
+		return
 	game_paused = value
 	if test_hud_panel.visible:
 		test_hud_panel.visible = false
 	get_tree().paused = value
-	pause_button.text = "Продолжить" if value else "Пауза"
+	pause_button.text = "ПРОДОЛЖИТЬ" if value else "ПАУЗА"
 	pause_menu.visible = value
 	pause_menu.z_index = 1000
+	_fit_overlay_to_screen(pause_menu)
 	if value:
 		_save_game()
-		var survived_seconds: int = maxi(int(float(Time.get_ticks_msec() - survival_started_at) / 1000.0), 0)
-		pause_stats.text = "Продержался: %d сек.\nОчки: %d   Уровень игрока: %d\nЧин: %s" % [survived_seconds, score, rank + 1, _rank_name()]
+		pause_stats.text = "Время игры: %s\nОчки: %d   Уровень игрока: %d\nЧин: %s" % [_format_duration(play_time), score, rank + 1, _rank_name()]
 		pause_menu_status.text = "Игра остановлена. Прогресс автоматически сохранён."
 		_update_hud("Пауза — прогресс сохранён")
 	else:
@@ -1831,6 +1861,7 @@ func _on_upgrade_button_pressed() -> void:
 		_upgrade_base()
 	else:
 		_upgrade_first_tower()
+	_close_building_action_panel()
 
 func _upgrade_base() -> void:
 	if base_upgrade_level >= 4 or credits < 1000:
@@ -1846,12 +1877,19 @@ func _upgrade_base() -> void:
 	_update_hud("Центральная база улучшена до уровня %d" % base_upgrade_level)
 
 func _on_repair_button_pressed() -> void:
+	_toggle_repair()
+	_close_building_action_panel()
+
+func _toggle_repair() -> void:
 	var target: Node = null
 	if base_selected and is_instance_valid(base):
 		target = base
 	elif is_instance_valid(selected_tower):
 		target = selected_tower
 	if not is_instance_valid(target):
+		return
+	if construction_states.has(target):
+		_update_hud("Ремонт недоступен во время модернизации")
 		return
 	if repair_states.has(target):
 		repair_states.erase(target)
@@ -1869,6 +1907,10 @@ func _on_repair_button_pressed() -> void:
 	_update_hud("Ремонт начался: 2 ОЖ/сек, 3 $/ОЖ")
 
 func _on_sell_button_pressed() -> void:
+	_sell_selected_tower()
+	_close_building_action_panel()
+
+func _sell_selected_tower() -> void:
 	if not is_instance_valid(selected_tower):
 		return
 	var tower_to_sell: GrayboxTower = selected_tower
@@ -2056,6 +2098,7 @@ func _try_build_tower(screen_position: Vector2) -> void:
 	tower.destroyed.connect(_on_tower_destroyed.bind(tower))
 	tower_cells[tower] = cell
 	tower_footprints[tower] = _clearance_cells(cell, selected_building_id)
+	towers_built += 1
 	_start_construction(tower)
 	for footprint_cell: Vector2i in tower_footprints[tower] as Array[Vector2i]:
 		grid.set_occupied(footprint_cell, true)
@@ -2207,9 +2250,87 @@ func _on_next_wave_pressed() -> void:
 		next_wave_button.visible = false
 
 func _on_all_waves_complete() -> void:
-	next_wave_button.visible = false
+	# Если база уже пала, итог — поражение, даже когда последний жук умер позже.
+	if game_over:
+		return
+	_begin_end_sequence(true)
+
+## Общий вход в конец забега: замораживает управление, ждёт END_SCREEN_DELAY и показывает итоги.
+func _begin_end_sequence(victory: bool) -> void:
+	if game_over:
+		return
 	game_over = true
-	_update_hud("ПОБЕДА — все атаки отражены")
+	end_screen_pending = true
+	if game_paused:
+		_set_game_paused(false)
+	if build_mode:
+		_on_cancel_build_button_pressed()
+	_close_build_palette()
+	_close_building_action_panel()
+	$Playfield/ContextPanel.visible = false
+	for control: Control in [next_wave_button, pause_button, actions_button, cancel_build_button, debug_button, debug_menu]:
+		if is_instance_valid(control):
+			control.visible = false
+	_update_hud("ПОБЕДА — все атаки отражены" if victory else "ПОРАЖЕНИЕ — центральная база уничтожена")
+	get_tree().create_timer(END_SCREEN_DELAY).timeout.connect(_show_end_screen.bind(victory))
+
+func _show_end_screen(victory: bool) -> void:
+	end_screen_pending = false
+	# Окно звания могло открыться одновременно с последним убийством — закрываем, чтобы не мешало.
+	notice_queue.clear()
+	notice_open = false
+	progression_notice.visible = false
+	pause_menu.visible = false
+	if not is_instance_valid(end_screen):
+		end_screen = END_SCREEN_SCENE.instantiate() as EndScreen
+		end_screen.z_index = 1200
+		add_child(end_screen)
+		_fit_overlay_to_screen(end_screen)
+		end_screen.restart_requested.connect(_on_end_restart_requested)
+		end_screen.menu_requested.connect(_on_end_menu_requested)
+	end_screen.show_result(victory, _build_end_stats())
+	# Мир замирает под экраном итогов; сам экран работает при паузе (process_mode = Always).
+	get_tree().paused = true
+
+func _build_end_stats() -> Array:
+	return [
+		["Время игры", _format_duration(play_time)],
+		["Очки", str(score)],
+		["Атака", "%d / %d" % [wave_manager.wave_number, wave_manager.wave_counts.size()]],
+		["Убито жуков", str(enemy_kills)],
+		["Звание", _rank_name()],
+		["Опыт", _experience_text()],
+		["Башен построено", str(towers_built)],
+		["Башен потеряно", str(towers_lost)],
+	]
+
+func _on_end_restart_requested() -> void:
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+func _on_end_menu_requested() -> void:
+	# Сохранение не трогаем: забег закончен, прежний автосейв остаётся как есть.
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/ui/start_menu.tscn")
+
+func _format_duration(seconds: float) -> String:
+	var total: int = maxi(int(seconds), 0)
+	var hours: int = floori(float(total) / 3600.0)
+	var minutes: int = floori(float(total % 3600) / 60.0)
+	var secs: int = total % 60
+	if hours > 0:
+		return "%d:%02d:%02d" % [hours, minutes, secs]
+	return "%02d:%02d" % [minutes, secs]
+
+## Порог убитых жуков для следующего звания или -1, если звание максимальное.
+func _next_rank_threshold() -> int:
+	return RANK_THRESHOLDS[rank + 1] if rank + 1 < RANK_THRESHOLDS.size() else -1
+
+func _experience_text() -> String:
+	var next_threshold: int = _next_rank_threshold()
+	if next_threshold < 0:
+		return "%d (макс.)" % experience
+	return "%d / %d" % [experience, next_threshold]
 
 func _cell_from_position(world_position: Vector2) -> Vector2i:
 	var origin_x: float = -float(MapGrid.WIDTH) * MapGrid.CELL_SIZE * 0.5
@@ -2265,6 +2386,7 @@ func _upgrade_first_tower() -> void:
 	_update_hud("Модернизация здания началась")
 
 func _on_tower_destroyed(tower: GrayboxTower) -> void:
+	towers_lost += 1
 	if selected_tower == tower:
 		selected_tower = null
 		_update_tower_info()
@@ -2287,8 +2409,9 @@ func _on_bug_died(registered_with_wave: bool) -> void:
 		wave_manager.notify_enemy_died()
 	credits += TEMPORARY_ENEMY_REWARD
 	score += 13
+	var rank_before_kill: int = rank
 	_grant_experience(1)
-	if enemy_kills == 15:
+	if rank_before_kill == 0 and rank >= 1:
 		_show_progression_notice("Вам присвоили новое звание и предоставляется первое дополнительное действие. Вы можете применить его, открыв меню дополнительных действий и выбрав желаемое действие. После этого вы должны будете выбрать цель и подтвердить выбор. После того, как вы применили дополнительное действие, вы можете снова активировать его в соответствующем здании за определенную сумму. В данном случае это центральная база, разведывательный полет.")
 		_show_progression_notice("Дополнительное действие можно выбрать в меню дополнительных действий.")
 	_update_hud("Враг уничтожен: +130 $ и +13 очков")
@@ -2300,16 +2423,68 @@ func _on_base_health_changed(current_health: float, maximum_health: float) -> vo
 		_update_tower_info()
 
 func _on_base_destroyed() -> void:
-	game_over = true
-	_set_game_paused(false)
-	pause_button.visible = false
-	_update_hud("ПОРАЖЕНИЕ — центральная база уничтожена. Нажми Esc для перезапуска")
+	_begin_end_sequence(false)
+
+## Оверлеи лежат под Node2D, поэтому якорям не от чего считаться: задаём размер экрана явно.
+func _fit_overlay_to_screen(overlay: Control) -> void:
+	overlay.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	overlay.position = Vector2.ZERO
+	overlay.size = playfield.size
+
+var range_display_tower: GrayboxTower = null
+
+func _sync_range_display() -> void:
+	var wanted: GrayboxTower = null
+	if not base_selected and is_instance_valid(selected_tower):
+		wanted = selected_tower
+	if is_instance_valid(range_display_tower) and range_display_tower != wanted:
+		range_display_tower.set_range_visible(false)
+	range_display_tower = wanted
+	if is_instance_valid(wanted):
+		wanted.set_range_visible(true)
+
+const BUILDING_ICON_DIR: String = "res://assets/ui/icons/"
+const BUILDING_ICON_FILES: Dictionary = {
+	151: "energy_station",
+	153: "fire_tower",
+	157: "laser_tower",
+	159: "beacon",
+	167: "plasma_tower",
+	169: "radar_tower",
+}
+
+## Иконка для инфо-панели: id = -1 — центральная база (level = уровень − 1), 163 — солдаты (три вида по апгрейду).
+func _building_icon(building_id: int, level: int) -> Texture2D:
+	var file_name: String = ""
+	if building_id < 0:
+		file_name = "base_l%d" % clampi(level + 1, 1, 3)
+	elif building_id == SOLDIERS_ID:
+		file_name = "soldiers_l%d" % clampi(level + 1, 1, 3)
+	else:
+		file_name = str(BUILDING_ICON_FILES.get(building_id, "fire_tower"))
+	return _load_icon_texture(BUILDING_ICON_DIR + file_name + ".png")
+
+var _icon_cache: Dictionary = {}
+
+func _load_icon_texture(path: String) -> Texture2D:
+	if _icon_cache.has(path):
+		return _icon_cache[path] as Texture2D
+	var texture: Texture2D = null
+	if FileAccess.file_exists(path + ".import"):
+		texture = load(path) as Texture2D
+	if texture == null:
+		# Файл ещё не импортирован редактором (только что запечён) — читаем PNG напрямую.
+		var image: Image = Image.load_from_file(ProjectSettings.globalize_path(path))
+		if image != null and not image.is_empty():
+			texture = ImageTexture.create_from_image(image)
+	_icon_cache[path] = texture
+	return texture
 
 func _update_tower_info() -> void:
+	_sync_range_display()
 	selection_strip.visible = base_selected or is_instance_valid(selected_tower)
-	var icon_texture: Texture2D = load("res://original/100.png") as Texture2D
 	if base_selected and is_instance_valid(base):
-		selection_icon.texture = icon_texture
+		selection_icon.texture = _building_icon(-1, base_upgrade_level - 1)
 		selection_hp_bar.max_value = base.max_health
 		selection_hp_bar.value = base.health
 		selection_title.text = "Центральная база"
@@ -2323,12 +2498,7 @@ func _update_tower_info() -> void:
 		return
 	var tower_name: String = _display_building_name(selected_tower.building_id, "Оборонительное сооружение")
 	var profile: Dictionary = GameBalance.BUILDINGS.get(selected_tower.building_id, {})
-	var icon_path: String = "res://original/103.png"
-	if selected_tower.building_id == ENERGY_STATION_ID:
-		icon_path = "res://original/113.png"
-	elif selected_tower.building_id == SOLDIERS_ID:
-		icon_path = "res://original/110.png"
-	selection_icon.texture = load(icon_path) as Texture2D
+	selection_icon.texture = _building_icon(selected_tower.building_id, selected_tower.upgrade_level)
 	selection_hp_bar.max_value = selected_tower.max_health
 	selection_hp_bar.value = selected_tower.health
 	selection_title.text = tower_name

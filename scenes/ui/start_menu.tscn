@@ -1,18 +1,164 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/start_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/ui/start_menu/sky.webp" id="2_sky"]
+[ext_resource type="Texture2D" path="res://assets/ui/start_menu/ridge.webp" id="3_ridge"]
+[ext_resource type="Texture2D" path="res://assets/ui/start_menu/logo.webp" id="4_logo"]
+[ext_resource type="Texture2D" path="res://assets/map/ground/mars_ground.webp" id="5_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1.webp" id="6_base"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1_lights_overlay.png" id="7_lights"]
 
-[sub_resource type="StyleBoxFlat" id="MenuPanel"]
-bg_color = Color(0.045, 0.06, 0.075, 0.97)
+[sub_resource type="Gradient" id="G_fade"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(0.1, 0.02, 0.01, 0, 0.06, 0.015, 0.01, 0.5, 0.03, 0.008, 0.005, 0.93)
+
+[sub_resource type="GradientTexture2D" id="T_fade"]
+gradient = SubResource("G_fade")
+width = 8
+height = 128
+fill_from = Vector2(0, 0)
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="G_vignette"]
+offsets = PackedFloat32Array(0.6, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0.02, 0.004, 0, 0.78)
+
+[sub_resource type="GradientTexture2D" id="T_vignette"]
+gradient = SubResource("G_vignette")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.46)
+fill_to = Vector2(1, 0.46)
+
+[sub_resource type="Gradient" id="G_soft"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="T_soft"]
+gradient = SubResource("G_soft")
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="G_dust_ramp"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="StyleBoxFlat" id="BtnNormal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.05, 0.03, 0.025, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.34, 0.15, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnHover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.16, 0.08, 0.04, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.6, 0.25, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnPressed"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.28, 0.12, 0.04, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.7, 0.3, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnDisabled"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.03, 0.03, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.22, 0.18, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.72, 0.3, 0.08, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.58, 0.34, 0.16, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+border_color = Color(1, 0.65, 0.25, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.88, 0.4, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.8, 0.45, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="PrimaryPressed"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.55, 0.22, 0.06, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.7, 0.3, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxEmpty" id="BtnFocus"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -23,7 +169,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Back" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,84 +177,181 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.025, 0.035, 0.045, 1)
+color = Color(0.17, 0.03, 0.008, 1)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="World" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 432.0
+offset_bottom = 768.0
+mouse_filter = 2
+
+[node name="Sky" type="TextureRect" parent="World"]
+layout_mode = 0
+offset_top = -110.0
+offset_right = 432.0
+offset_bottom = 658.0
+mouse_filter = 2
+texture = ExtResource("2_sky")
+expand_mode = 1
+
+[node name="SkyBottom" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_left = -1200.0
+offset_top = 657.0
+offset_right = 1632.0
+offset_bottom = 1840.0
+mouse_filter = 2
+color = Color(0.11, 0.025, 0.009, 1)
+
+[node name="Diorama" type="Node2D" parent="World"]
+
+[node name="Dust" type="CPUParticles2D" parent="World"]
+position = Vector2(216, 500)
+amount = 40
+texture = SubResource("T_soft")
+lifetime = 10.0
+preprocess = 10.0
+emission_shape = 3
+emission_rect_extents = Vector2(300, 90)
+direction = Vector2(-1, 0)
+spread = 25.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 24.0
+scale_amount_min = 0.6
+scale_amount_max = 1.6
+color = Color(0.55, 0.22, 0.12, 0.13)
+color_ramp = SubResource("G_dust_ramp")
+
+[node name="Vignette" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("T_vignette")
+expand_mode = 1
 
-[node name="Panel" type="Panel" parent="Center"]
-custom_minimum_size = Vector2(440, 500)
-layout_mode = 2
-theme_override_styles/panel = SubResource("MenuPanel")
+[node name="Ui" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 432.0
+offset_bottom = 768.0
+mouse_filter = 2
 
-[node name="Content" type="VBoxContainer" parent="Center/Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 32.0
-offset_top = 28.0
-offset_right = -32.0
-offset_bottom = -28.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
+[node name="Logo" type="TextureRect" parent="Ui"]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 33.0
+offset_right = 406.0
+offset_bottom = 247.0
+mouse_filter = 2
+texture = ExtResource("4_logo")
+expand_mode = 1
 
-[node name="Eyebrow" type="Label" parent="Center/Panel/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.74, 0.39, 0.17, 1)
-theme_override_font_sizes/font_size = 16
-text = "SURVIVAL • MARS 2007"
+[node name="RemakeLabel" type="Label" parent="Ui"]
+layout_mode = 0
+offset_top = 198.0
+offset_right = 432.0
+offset_bottom = 218.0
+theme_override_colors/font_color = Color(0.95, 0.55, 0.22, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.02, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "REMAKE OF THE 2007 GAME"
 horizontal_alignment = 1
 
-[node name="Title" type="Label" parent="Center/Panel/Content"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(1, 0.84, 0.55, 1)
-theme_override_font_sizes/font_size = 34
-text = "ШТУРМОВОЙ ОТРЯД\nМАРС"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Tagline" type="Label" parent="Center/Panel/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.79, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "Командуй обороной. Выживи." 
+[node name="Tagline" type="Label" parent="Ui"]
+layout_mode = 0
+offset_top = 220.0
+offset_right = 432.0
+offset_bottom = 244.0
+theme_override_colors/font_color = Color(1, 0.88, 0.68, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.02, 0, 0.9)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 15
+text = "Удержи базу. Отрази все атаки."
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="Center/Panel/Content"]
-custom_minimum_size = Vector2(0, 12)
-layout_mode = 2
-
-[node name="NewGameButton" type="Button" parent="Center/Panel/Content"]
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
+[node name="NewGameButton" type="Button" parent="Ui"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 572.0
+offset_right = 386.0
+offset_bottom = 620.0
+theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.7, 1)
 theme_override_font_sizes/font_size = 20
-text = "Новая игра"
+theme_override_styles/normal = SubResource("PrimaryNormal")
+theme_override_styles/hover = SubResource("PrimaryHover")
+theme_override_styles/pressed = SubResource("PrimaryPressed")
+theme_override_styles/focus = SubResource("BtnFocus")
+text = "НОВАЯ ИГРА"
 
-[node name="ContinueButton" type="Button" parent="Center/Panel/Content"]
-custom_minimum_size = Vector2(0, 48)
+[node name="ContinueButton" type="Button" parent="Ui"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 628.0
+offset_right = 386.0
+offset_bottom = 686.0
+theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
+theme_override_styles/normal = SubResource("BtnNormal")
+theme_override_styles/hover = SubResource("BtnHover")
+theme_override_styles/pressed = SubResource("BtnPressed")
+theme_override_styles/disabled = SubResource("BtnDisabled")
+theme_override_styles/focus = SubResource("BtnFocus")
+
+[node name="Labels" type="VBoxContainer" parent="Ui/ContinueButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="Main" type="Label" parent="Ui/ContinueButton/Labels"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 18
-text = "Продолжить"
-
-[node name="HelpButton" type="Button" parent="Center/Panel/Content"]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_override_font_sizes/font_size = 17
-text = "Справка"
-
-[node name="Footer" type="Label" parent="Center/Panel/Content"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.58, 0.59, 1)
-theme_override_font_sizes/font_size = 12
-text = "Ретро-стратегия • версия разработки"
+text = "ПРОДОЛЖИТЬ"
 horizontal_alignment = 1
+
+[node name="Sub" type="Label" parent="Ui/ContinueButton/Labels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.62, 0.45, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="HelpButton" type="Button" parent="Ui"]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 694.0
+offset_right = 386.0
+offset_bottom = 736.0
+theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("BtnNormal")
+theme_override_styles/hover = SubResource("BtnHover")
+theme_override_styles/pressed = SubResource("BtnPressed")
+theme_override_styles/focus = SubResource("BtnFocus")
+text = "СПРАВКА"
+
+[node name="VersionLabel" type="Label" parent="Ui"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 744.0
+offset_right = 416.0
+offset_bottom = 764.0
+theme_override_colors/font_color = Color(0.85, 0.6, 0.42, 0.7)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 2
+
 
 
