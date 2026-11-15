@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/start_menu/sky.webp" id="2_sky"]
 [ext_resource type="Texture2D" path="res://assets/ui/start_menu/ridge.webp" id="3_ridge"]
 [ext_resource type="Texture2D" path="res://assets/ui/start_menu/logo.webp" id="4_logo"]
-[ext_resource type="Texture2D" path="res://assets/map/ground/mars_ground.webp" id="5_ground"]
+[ext_resource type="Texture2D" path="res://assets/map/mars_ground_1024.webp" id="5_ground"]
 [ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1.webp" id="6_base"]
 [ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1_lights_overlay.png" id="7_lights"]
 

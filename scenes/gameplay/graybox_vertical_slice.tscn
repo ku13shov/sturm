@@ -8,12 +8,12 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/commander_intro.tscn" id="8_commander_intro"]
 [ext_resource type="PackedScene" path="res://scenes/ui/build_palette_popup.tscn" id="9_build_palette"]
 [ext_resource type="Script" uid="uid://6tbf36dy3eng" path="res://scripts/graybox_hover_debug.gd" id="10_hover_debug"]
-[ext_resource type="Texture2D" uid="uid://dgj32uu4jbot5" path="res://assets/map/ground/mars_ground.webp" id="11_mars_ground"]
-[ext_resource type="Script" uid="uid://qicrf8asu66a" path="res://scripts/terrain_variant_layer.gd" id="12_terrain_variants"]
+[ext_resource type="Texture2D" path="res://assets/map/mars_ground_1024.webp" id="11_mars_ground"]
 [ext_resource type="Script" uid="uid://d2xxhny5one0w" path="res://scripts/map_decoration_layer.gd" id="13_map_decorations"]
 [ext_resource type="Shader" uid="uid://cso67seba5p8w" path="res://shaders/fog_edge_fade.gdshader" id="14_fog_shader"]
 [ext_resource type="Shader" uid="uid://b4tk5qo1uy6mr" path="res://shaders/fog_of_war_mask.gdshader" id="15_fog_mask_shader"]
 [ext_resource type="Theme" path="res://assets/ui/mars_theme.tres" id="16_theme"]
+[ext_resource type="Script" path="res://scripts/map_dust_layer.gd" id="17_dust_layer"]
 
 [sub_resource type="StyleBoxFlat" id="PlayfieldStyle"]
 bg_color = Color(0.82, 0.28, 0.09, 1)
@@ -106,13 +106,12 @@ texture = ExtResource("11_mars_ground")
 expand_mode = 1
 stretch_mode = 1
 
-[node name="TerrainVariantLayer" type="Node2D" parent="Playfield/Entities" unique_id=718204632]
-z_index = -5
-script = ExtResource("12_terrain_variants")
+[node name="DustLayer" type="Node2D" parent="Playfield/Entities" unique_id=718204690]
+script = ExtResource("17_dust_layer")
 
 [node name="BuildPreview" type="Polygon2D" parent="Playfield/Entities" unique_id=64622462]
 visible = false
-z_index = 4
+z_index = 6
 color = Color(0.2, 0.9, 0.45, 0.55)
 polygon = PackedVector2Array(-16, -64, 16, -64, 16, -16, 64, -16, 64, 16, 16, 16, 16, 64, -16, 64, -16, 16, -64, 16, -64, -16, -16, -16)
 

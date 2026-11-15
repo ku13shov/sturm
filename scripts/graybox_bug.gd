@@ -28,6 +28,23 @@ var source_attack_range: float = 0.0
 var resistances: Dictionary = {}
 var target: Node2D
 var target_provider: Callable
+## Строит путь по сетке к цели: Callable(global_position, target) -> Array[Vector2] в рамке родителя жука.
+## Пустой путь означает идти напрямую.
+var path_provider: Callable
+## Цель, для которой построен текущий path_points. Если target сменилась, путь строится заново.
+var path_target: Node2D
+## Не пересчитывать путь чаще, чем раз в это время (мс), чтобы смена цели туда-сюда не грузила процессор.
+const PATH_RETARGET_COOLDOWN_MS: int = 400
+var _path_retarget_allowed_at_ms: int = 0
+## Допустимое отклонение жука от маршрута (единицы карты), после которого путь строится заново.
+const PATH_DRIFT_LIMIT: float = 48.0
+## Разброс задержки пересчёта при изменении сетки (мс): жуки не должны искать путь все в один кадр.
+const PATH_STALE_JITTER_MS: int = 300
+## Возвращает текущую версию сетки (MapGrid.version). Нужна, чтобы заметить, что путь мог устареть.
+var grid_version_provider: Callable
+## Версия сетки на момент построения текущего пути.
+var path_grid_version: int = 0
+var _stale_repath_at_ms: int = -1
 @export var target_detection_radius: float = 150.0
 @export var damage_scale: float = 0.1
 @export var graybox_damage: float = 3.0
@@ -93,6 +110,79 @@ func set_target_provider(provider: Callable) -> void:
 func set_path(points: Array[Vector2]) -> void:
 	path_points = points.duplicate()
 	path_index = 0
+	path_target = target
+	path_grid_version = _current_grid_version()
+
+func set_path_provider(provider: Callable) -> void:
+	path_provider = provider
+
+func set_grid_version_provider(provider: Callable) -> void:
+	grid_version_provider = provider
+	path_grid_version = _current_grid_version()
+
+func _current_grid_version() -> int:
+	if not grid_version_provider.is_valid():
+		return 0
+	return int(grid_version_provider.call())
+
+## Строит путь заново от текущей позиции к текущей цели через path_provider.
+func _rebuild_path() -> void:
+	_path_retarget_allowed_at_ms = Time.get_ticks_msec() + PATH_RETARGET_COOLDOWN_MS
+	_stale_repath_at_ms = -1
+	path_target = target
+	path_grid_version = _current_grid_version()
+	var result: Variant = path_provider.call(global_position, target)
+	var new_points: Array[Vector2] = []
+	if result is Array:
+		for point_value: Variant in result as Array:
+			if point_value is Vector2:
+				new_points.append(point_value as Vector2)
+	path_points = new_points
+	path_index = 0
+	# Первая точка пути это центр клетки, в которой стоит жук. Если она позади (дальше от второй точки,
+	# чем сам жук), пропускаем её, иначе при каждом перестроении жук делает шаг назад.
+	if new_points.size() >= 2:
+		var frame: Node2D = get_parent() as Node2D
+		var here: Vector2 = frame.to_local(global_position) if frame != null else global_position
+		if here.distance_to(new_points[1]) <= new_points[0].distance_to(new_points[1]):
+			path_index = 1
+
+## Если цель сменилась (здание вместо базы, база после гибели здания), строит путь по сетке к новой цели.
+## При частой смене цели пересчёт откладывается, а жук пока идёт по прежнему пути.
+func _refresh_path_for_target() -> void:
+	if path_target == target or not path_provider.is_valid():
+		return
+	if Time.get_ticks_msec() < _path_retarget_allowed_at_ms:
+		return
+	_rebuild_path()
+
+## Перестраивает путь, если он мог устареть: изменилась сетка (построили или снесли здание)
+## или жука снесло с маршрута дальше PATH_DRIFT_LIMIT. Не чаще PATH_RETARGET_COOLDOWN_MS.
+func _refresh_path_if_stale() -> void:
+	if not path_provider.is_valid() or path_target != target:
+		return
+	var now_ms: int = Time.get_ticks_msec()
+	if now_ms < _path_retarget_allowed_at_ms:
+		return
+	if grid_version_provider.is_valid() and path_grid_version != _current_grid_version():
+		# Сетка изменилась: пересчёт со случайной задержкой, чтобы жуки не искали путь одновременно.
+		if _stale_repath_at_ms < 0:
+			_stale_repath_at_ms = now_ms + randi_range(0, PATH_STALE_JITTER_MS)
+		if now_ms >= _stale_repath_at_ms:
+			_rebuild_path()
+		return
+	if _is_off_route():
+		_rebuild_path()
+
+## Отклонение жука от текущего отрезка маршрута больше допустимого. Пока жук идёт к первой точке пути
+## (на спавне она может быть за пределами видимой зоны), отклонение не проверяется.
+func _is_off_route() -> bool:
+	if path_index <= 0 or path_index >= path_points.size():
+		return false
+	var current: Vector2 = _path_point_to_global(path_index)
+	var previous: Vector2 = _path_point_to_global(path_index - 1)
+	var closest: Vector2 = Geometry2D.get_closest_point_to_segment(global_position, previous, current)
+	return global_position.distance_to(closest) / map_scale() > PATH_DRIFT_LIMIT
 
 func _path_point_to_global(index: int) -> Vector2:
 	# path_points live in the grid-local frame of Playfield/Entities (the same
@@ -170,15 +260,16 @@ func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target) or not _target_is_alive():
 		velocity = Vector2.ZERO
 		return
+	_refresh_path_for_target()
+	_refresh_path_if_stale()
 	var map_zoom_scale: float = map_scale()
 	var distance_to_target: float = global_position.distance_to(target.global_position) / map_zoom_scale
 	attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	if distance_to_target > 34.0:
 		var destination: Vector2 = target.global_position
-		# Once a building is selected, pursue that building directly. The old
-		# base path must not make the bug walk past a valid defensive target.
-		var pursuing_secondary_target: bool = target is GrayboxTower
-		if not pursuing_secondary_target and path_index < path_points.size():
+		# Путь по сетке (в обход скал) строится для любой цели: и для базы, и для здания.
+		# Когда путь закончился или пустой (прямая видимость свободна), идём к цели напрямую.
+		if path_index < path_points.size():
 			destination = _path_point_to_global(path_index)
 			if global_position.distance_to(destination) / map_zoom_scale < 8.0:
 				path_index += 1

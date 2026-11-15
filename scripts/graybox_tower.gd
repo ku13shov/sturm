@@ -42,7 +42,7 @@ var range_visible: bool = false
 ## Тёмное вытоптанное пятно земли под башней солдат; появляется вместе со стройкой.
 var ground_decal: GroundDecal
 ## Ширина пятна относительно ширины клетки башни.
-const GROUND_DECAL_WIDTH_OF_CELL: float = 1.3
+const GROUND_DECAL_WIDTH_OF_CELL: float = 1.45
 
 func _add_ground_decal() -> void:
 	ground_decal = GroundDecal.new()

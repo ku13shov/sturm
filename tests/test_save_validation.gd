@@ -87,6 +87,9 @@ func test_full_runtime_save_restore_round_trip() -> void:
 	game.credits = 4321
 	var captured: Dictionary = game._capture_save_data()
 	game._apply_save_data(captured)
+	# path_index проверяем сразу после загрузки: дальше восстановленный жук (как и обычный) может
+	# перестроить путь по сетке (R4b), и индекс изменится независимо от сохранения.
+	var restored_path_index: int = (game.enemies.get_child(0) as GrayboxBug).path_index
 	var pending_tower: GrayboxTower = game.towers.get_child(0) as GrayboxTower
 	pending_tower.combat_enabled = false
 	await get_tree().process_frame
@@ -102,7 +105,7 @@ func test_full_runtime_save_restore_round_trip() -> void:
 	assert(restored_enemy.enemy_id == 70)
 	assert(is_equal_approx(restored_enemy.health, 17.0))
 	assert(restored_enemy.registered_with_wave)
-	assert(restored_enemy.path_index == 1)
+	assert(restored_path_index == 1)
 	assert(game.wave_manager.wave_number == 2)
 	assert(game.wave_manager.pending_spawns == 1)
 	assert(game.wave_manager.active_enemies == 1)

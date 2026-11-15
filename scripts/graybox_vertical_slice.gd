@@ -98,6 +98,8 @@ var debug_money_button: Button
 var debug_fog_button: Button
 var debug_spawn_button: Button
 var debug_close_button: Button
+var debug_rocks_button: Button
+var rock_debug_overlay: RockDebugOverlay
 var debug_cell_diamond_enabled: bool = false
 ## Индекс режима спавна: 0 = случайно, 1..8 = фиксированная сторона (см. DEBUG_SPAWN_LABELS).
 var debug_spawn_mode: int = 0
@@ -189,6 +191,10 @@ var spawn_points: Array[Vector2] = []
 var active_spawn_position: Vector2 = Vector2.ZERO
 const SPAWN_MARGIN: float = 48.0
 const BUG_TARGET_RADIUS: float = 90.0
+## Уже выбранную башню жук не бросает, пока она в радиусе BUG_TARGET_RADIUS * BUG_TARGET_HOLD_FACTOR и не осталась
+## позади него дальше чем на BUG_TARGET_HOLD_MARGIN (иначе на границе радиуса жук метался бы между башней и базой).
+const BUG_TARGET_HOLD_FACTOR: float = 1.6
+const BUG_TARGET_HOLD_MARGIN: float = 48.0
 
 func _update_continue_button() -> void:
 	var best_data: Dictionary = _read_valid_save(SAVE_PATH)
@@ -493,7 +499,7 @@ func _clear_saved_buildings() -> void:
 func _restore_building(building_data: Dictionary) -> void:
 	var building_id: int = int(building_data.get("building_id", FIRE_TOWER_ID))
 	var cell: Vector2i = Vector2i(int(building_data.get("cell_x", 0)), int(building_data.get("cell_y", 0)))
-	if not SUPPORTED_BUILDING_IDS.has(building_id) or not grid.is_walkable(cell):
+	if not SUPPORTED_BUILDING_IDS.has(building_id) or not grid.is_buildable(cell):
 		return
 	var tower: GrayboxTower = _scene_for_building(building_id).instantiate() as GrayboxTower
 	tower.building_id = building_id
@@ -514,6 +520,10 @@ func _restore_enemy(enemy_data: Dictionary) -> bool:
 	enemy.enemy_id = enemy_id
 	enemy.position = Vector2(float(enemy_data.get("x", 0.0)), float(enemy_data.get("y", 0.0)))
 	enemy.set_target(base)
+	# Те же провайдеры, что у жуков при спавне: выбор цели, путь в обход скал и версия сетки.
+	enemy.set_target_provider(Callable(self, "_target_for_bug"))
+	enemy.set_path_provider(Callable(self, "_path_for_bug"))
+	enemy.set_grid_version_provider(Callable(self, "_grid_version"))
 	enemy.registered_with_wave = bool(enemy_data.get("registered_with_wave", false))
 	var saved_path_data: Variant = enemy_data.get("path", [])
 	var saved_path: Array[Vector2] = []
@@ -542,8 +552,8 @@ func _setup_debug_controls() -> void:
 
 	debug_menu = Panel.new()
 	debug_menu.name = "DebugMenu"
-	debug_menu.position = Vector2(8.0, 400.0)
-	debug_menu.size = Vector2(300.0, 265.0)
+	debug_menu.position = Vector2(8.0, 355.0)
+	debug_menu.size = Vector2(300.0, 310.0)
 	debug_menu.z_index = 2700
 	debug_menu.visible = false
 	add_child(debug_menu)
@@ -575,8 +585,15 @@ func _setup_debug_controls() -> void:
 	debug_spawn_button.pressed.connect(_on_debug_spawn_pressed)
 	debug_menu.add_child(debug_spawn_button)
 
+	debug_rocks_button = Button.new()
+	debug_rocks_button.position = Vector2(14.0, 203.0)
+	debug_rocks_button.size = Vector2(270.0, 42.0)
+	debug_rocks_button.text = "СКАЛЫ: СЛЕД И БЛОКИ ВЫКЛ"
+	debug_rocks_button.pressed.connect(_on_debug_rocks_pressed)
+	debug_menu.add_child(debug_rocks_button)
+
 	debug_close_button = Button.new()
-	debug_close_button.position = Vector2(14.0, 208.0)
+	debug_close_button.position = Vector2(14.0, 255.0)
 	debug_close_button.size = Vector2(270.0, 38.0)
 	debug_close_button.text = "ЗАКРЫТЬ"
 	debug_close_button.pressed.connect(_on_debug_button_pressed)
@@ -615,6 +632,15 @@ func _on_debug_spawn_pressed() -> void:
 		active_spawn_position = DEBUG_SPAWN_DIRECTIONS[debug_spawn_mode - 1] * half_extent
 	_update_spawn_marker()
 	_update_hud("Дебаг: спавн жуков — " + DEBUG_SPAWN_LABELS[debug_spawn_mode].to_lower())
+
+func _on_debug_rocks_pressed() -> void:
+	# Включает отладочную отрисовку скал: эллипс следа, центр картинки и заблокированные клетки сетки.
+	if rock_debug_overlay == null:
+		rock_debug_overlay = RockDebugOverlay.new()
+		rock_debug_overlay.setup(grid, entities)
+		entities.add_child(rock_debug_overlay)
+	rock_debug_overlay.visible = not rock_debug_overlay.visible
+	debug_rocks_button.text = "СКАЛЫ: СЛЕД И БЛОКИ " + ("ВКЛ" if rock_debug_overlay.visible else "ВЫКЛ")
 
 func _apply_cell_diamond_debug(tower: GrayboxTower) -> void:
 	if not is_instance_valid(tower):
@@ -685,7 +711,17 @@ func _ensure_hud_compatibility() -> void:
 	_ensure_hud_button(hud_node, "CancelBuildButton")
 	_ensure_hud_button(hud_node, "PauseButton")
 
+func _add_ground_detail_layer() -> void:
+	var detail_layer: GroundDetailLayer = GroundDetailLayer.new()
+	detail_layer.name = "GroundDetailLayer"
+	entities.add_child(detail_layer)
+	var decoration_layer: Node = entities.get_node_or_null("DecorationLayer")
+	if decoration_layer != null:
+		entities.move_child(detail_layer, decoration_layer.get_index())
+
+
 func _ready() -> void:
+	_add_ground_detail_layer()
 	_ensure_hud_compatibility()
 	_setup_debug_controls()
 	randomize()
@@ -830,7 +866,7 @@ func _on_palette_confirmed() -> void:
 	placement_preview_valid = _can_build_at(local_world, pending_build_cell)
 	build_preview.visible = true
 	build_button.text = "Разместить здесь"
-	_update_hud("Перемести юнит и нажми повторно для строительства")
+	_update_hud("Перемести юнит и нажми повторно для строительства" if placement_preview_valid else "Здесь строить нельзя — выбери свободное место")
 
 func _close_build_palette() -> void:
 	build_palette_popup.visible = false
@@ -1235,8 +1271,10 @@ func _process_construction(delta: float) -> void:
 			progress_node.queue_free()
 			var original_visibility: Dictionary = state["original_visibility"] as Dictionary
 			for child: Node in tower.get_children():
-				if child != pad_visual and child != construction_visual and child != progress_node and not child is GroundDecal and child is CanvasItem:
+				if child != pad_visual and child != construction_visual and child != progress_node and child != tower.range_indicator and not child is GroundDecal and child is CanvasItem:
 					(child as CanvasItem).visible = bool(original_visibility.get(child.name, true))
+			# Радиус атаки не восстанавливаем из снимка видимости: им управляет только выбор здания (_sync_range_display).
+			tower.set_range_visible(false)
 			var is_upgrade: bool = bool(state.get("is_upgrade", false))
 			if is_upgrade:
 				tower.upgrade()
@@ -1671,9 +1709,16 @@ func _update_build_preview() -> void:
 	var local_position: Vector2 = entities.to_local(build_cursor_position)
 	var cell: Vector2i = _cell_from_position(local_position)
 	var clamped_cell: Vector2i = Vector2i(clampi(cell.x, 0, MapGrid.WIDTH - 1), clampi(cell.y, 0, MapGrid.HEIGHT - 1))
-	build_preview.position = _slice_world_from_cell(clamped_cell)
-	var footprint: Vector2i = _building_footprint(selected_building_id)
-	var half_size: Vector2 = Vector2(footprint) * MapGrid.CELL_SIZE * 0.5
+	# Показываем реально занимаемую область: footprint здания плюс кольцо зазора в 1 клетку
+	# (те же клетки, что _clearance_cells помечает занятыми). Для солдат 1x1 это область 3x3.
+	var occupied_cells: Array[Vector2i] = _clearance_cells(clamped_cell, selected_building_id)
+	var min_cell: Vector2i = occupied_cells[0]
+	var max_cell: Vector2i = occupied_cells[0]
+	for occupied_cell: Vector2i in occupied_cells:
+		min_cell = Vector2i(mini(min_cell.x, occupied_cell.x), mini(min_cell.y, occupied_cell.y))
+		max_cell = Vector2i(maxi(max_cell.x, occupied_cell.x), maxi(max_cell.y, occupied_cell.y))
+	build_preview.position = (_slice_world_from_cell(min_cell) + _slice_world_from_cell(max_cell)) * 0.5
+	var half_size: Vector2 = Vector2(max_cell - min_cell + Vector2i.ONE) * MapGrid.CELL_SIZE * 0.5
 	build_preview.polygon = PackedVector2Array([Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y), Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y)])
 	build_preview.visible = true
 	placement_preview_cell = cell
@@ -1720,50 +1765,17 @@ func _add_contact_shadow(parent_node: Node2D, shadow_scale: Vector2, alpha: floa
 	parent_node.add_child(shadow)
 
 func _register_rock_formations() -> void:
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 20260324
-	var rock_positions: Array[Vector2] = []
-	var nearby_position: Vector2 = base.position + Vector2(235.0, -175.0)
-	rock_positions.append(nearby_position)
-	var attempts: int = 0
-	while rock_positions.size() < 11 and attempts < 300:
-		attempts += 1
-		var candidate: Vector2 = Vector2(
-			rng.randf_range(-MAP_HALF_EXTENT.x + 140.0, MAP_HALF_EXTENT.x - 140.0),
-			rng.randf_range(-MAP_HALF_EXTENT.y + 140.0, MAP_HALF_EXTENT.y - 140.0)
-		)
-		if candidate.distance_to(base.position) < 300.0:
-			continue
-		var too_close: bool = false
-		for existing_position: Vector2 in rock_positions:
-			if candidate.distance_to(existing_position) < 600.0:
-				too_close = true
-				break
-		if too_close:
-			continue
-		rock_positions.append(candidate)
-	for index: int in rock_positions.size():
-		var rock: StaticBody2D = ROCK_FORMATION_SCENE.instantiate() as StaticBody2D
-		rock.position = rock_positions[index]
-		var size_roll: float = rng.randf()
-		var rock_scale: float = 0.34 if size_roll < 0.35 else (0.50 if size_roll < 0.92 else 0.62)
-		rock.scale = Vector2.ONE * rock_scale
-		_add_contact_shadow(rock, Vector2(1.9, 1.0), 0.24)
-		if rng.randf() > 0.5:
-			rock.scale.x *= -1.0
+	# Расстановка группами с проверкой путей к базе: scripts/rock_placement.gd (план ROCKS-1, R5).
+	# Одиночная скала возле базы (base + (235, -175)) убрана: она не прошла бы правило «не ближе 300 px к базе».
+	var placements: Array[Dictionary] = RockPlacement.generate(grid, base.position, MAP_HALF_EXTENT, RockPlacement.ROCK_SEED)
+	for placement: Dictionary in placements:
+		var rock: RockFormation = ROCK_FORMATION_SCENE.instantiate() as RockFormation
+		rock.position = placement["position"] as Vector2
+		rock.apply_variant(int(placement["variant"]), float(placement["size_jitter"]))
+		if bool(placement["flipped"]):
+			rock.set_flipped(true)
 		entities.add_child(rock)
-		# Navigation is grid-based, so reserve enough cells for the scaled rock
-		# plus the bug's collision radius. This keeps pathfinding consistent with
-		# the StaticBody2D collision shape instead of allowing corner clipping.
-		var rock_half_width: float = 215.0 * rock_scale
-		var bug_clearance: float = 18.0
-		var cell_radius: int = ceili((rock_half_width + bug_clearance) / MapGrid.CELL_SIZE)
-		var center_cell: Vector2i = _cell_from_position(rock.position)
-		for y: int in range(-cell_radius, cell_radius + 1):
-			for x: int in range(-cell_radius, cell_radius + 1):
-				var blocked_cell: Vector2i = center_cell + Vector2i(x, y)
-				if grid.is_valid_cell(blocked_cell):
-					grid.set_walkable(blocked_cell, false)
+		RockPlacement.block_rock_on_grid(grid, rock.blocking_ellipse_in_world())
 
 func _can_build_at(local_position: Vector2, cell: Vector2i) -> bool:
 	if not SUPPORTED_BUILDING_IDS.has(selected_building_id) or credits < _build_cost(selected_building_id):
@@ -1785,12 +1797,12 @@ func _can_build_at(local_position: Vector2, cell: Vector2i) -> bool:
 		return false
 	# The building itself must fit inside the map.
 	for footprint_cell: Vector2i in _footprint_cells(cell, selected_building_id):
-		if not grid.is_valid_cell(footprint_cell) or not grid.is_walkable(footprint_cell):
+		if not grid.is_valid_cell(footprint_cell) or not grid.is_buildable(footprint_cell):
 			return false
 	# Clearance is an in-map gameplay buffer. Cells outside the map must not
 	# make an otherwise valid edge placement fail.
 	for blocked_cell: Vector2i in _clearance_cells(cell, selected_building_id):
-		if grid.is_valid_cell(blocked_cell) and not grid.is_walkable(blocked_cell):
+		if grid.is_valid_cell(blocked_cell) and not grid.is_buildable(blocked_cell):
 			return false
 	return true
 
@@ -2014,22 +2026,22 @@ func _select_or_build(screen_position: Vector2) -> void:
 	var candidate_cell: Vector2i = _cell_from_position(local_position)
 	if not grid.is_valid_cell(candidate_cell):
 		return
-	if grid.is_walkable(candidate_cell) and local_position.distance_to(base.position) >= 70.0:
-		pending_build_cell = candidate_cell
-		pending_build_screen_position = screen_position
-		palette_picker.clear()
-		for building_id: int in BUILD_PALETTE_SUPPORTED_IDS:
-			var profile: Dictionary = GameBalance.BUILDINGS.get(building_id, {})
-			var building_name: String = _display_building_name(building_id, str(profile.get("name", "Постройка")))
-			palette_picker.add_item(building_name, building_id)
-			palette_picker.set_item_disabled(palette_picker.item_count - 1, credits < _build_cost(building_id))
-		palette_picker.select(0)
-		selected_building_id = palette_picker.get_item_id(0)
-		_update_palette_details()
-		build_palette_popup.visible = true
-		build_picker_open = true
-		return
-	_try_build_tower(screen_position)
+	# Меню открывается по клику на любую точку карты (включая скалы), кроме базы и зданий
+	# (они обработаны выше). Подходит ли клетка для постройки, проверяется позже,
+	# когда игрок выбирает место в режиме размещения (_can_build_at).
+	pending_build_cell = candidate_cell
+	pending_build_screen_position = screen_position
+	palette_picker.clear()
+	for building_id: int in BUILD_PALETTE_SUPPORTED_IDS:
+		var profile: Dictionary = GameBalance.BUILDINGS.get(building_id, {})
+		var building_name: String = _display_building_name(building_id, str(profile.get("name", "Постройка")))
+		palette_picker.add_item(building_name, building_id)
+		palette_picker.set_item_disabled(palette_picker.item_count - 1, credits < _build_cost(building_id))
+	palette_picker.select(0)
+	selected_building_id = palette_picker.get_item_id(0)
+	_update_palette_details()
+	build_palette_popup.visible = true
+	build_picker_open = true
 
 func _find_tower_at_position(local_position: Vector2) -> GrayboxTower:
 	var best_tower: GrayboxTower
@@ -2094,6 +2106,9 @@ func _try_build_tower(screen_position: Vector2) -> void:
 	tower.position = _slice_world_from_cell(cell)
 	tower.z_index = 5
 	towers.add_child(tower)
+	var ground_wear: GroundWear = GroundWear.new()
+	ground_wear.name = "GroundWear"
+	tower.add_child(ground_wear)
 	_apply_cell_diamond_debug(tower)
 	tower.destroyed.connect(_on_tower_destroyed.bind(tower))
 	tower_cells[tower] = cell
@@ -2134,7 +2149,7 @@ func _random_edge_spawn() -> Vector2:
 		return Vector2(along, half_extent + SPAWN_MARGIN)
 	return Vector2(-half_extent - SPAWN_MARGIN, along)
 
-func _target_for_bug(world_position: Vector2, _fallback: Node2D) -> Node2D:
+func _target_for_bug(world_position: Vector2, current_target: Node2D) -> Node2D:
 	# The base has priority whenever it is inside the bug's interest radius.
 	# A secondary building is considered only when the base is still outside it.
 	var interest_radius: float = BUG_TARGET_RADIUS
@@ -2144,6 +2159,16 @@ func _target_for_bug(world_position: Vector2, _fallback: Node2D) -> Node2D:
 	var base_map_pos: Vector2 = entities.to_local(base.global_position)
 	if world_position.distance_to(base_map_pos) <= interest_radius:
 		return base
+	# Already chosen tower: keep it while it is still close and not clearly behind the bug. Without this
+	# a bug that slides past the tower becomes closer to the base than the tower, drops it, picks the base,
+	# then notices the tower again and turns back (and every change rebuilds the path).
+	var held_tower: GrayboxTower = current_target as GrayboxTower
+	if is_instance_valid(held_tower) and held_tower.health > 0.0:
+		var held_map_pos: Vector2 = entities.to_local(held_tower.global_position)
+		var held_to_base: float = held_map_pos.distance_to(base_map_pos)
+		var bug_to_base: float = world_position.distance_to(base_map_pos)
+		if world_position.distance_to(held_map_pos) <= interest_radius * BUG_TARGET_HOLD_FACTOR and held_to_base < bug_to_base + BUG_TARGET_HOLD_MARGIN:
+			return held_tower
 	var nearest_tower: GrayboxTower
 	var nearest_distance: float = interest_radius
 	for tower_node: Node in towers.get_children():
@@ -2217,6 +2242,8 @@ func _spawn_bug(spawn_position: Vector2, is_wave_enemy: bool) -> void:
 	bug.registered_with_wave = is_wave_enemy
 	bug.set_target(base)
 	bug.set_target_provider(Callable(self, "_target_for_bug"))
+	bug.set_path_provider(Callable(self, "_path_for_bug"))
+	bug.set_grid_version_provider(Callable(self, "_grid_version"))
 	bug.set_path(_path_to_base(spawn_position))
 	bug.died.connect(_on_bug_died.bind(is_wave_enemy))
 	enemies.add_child(bug)
@@ -2355,6 +2382,37 @@ func _path_to_base(start_position: Vector2) -> Array[Vector2]:
 	var cell_path: Array[Vector2i] = navigation.find_path(start_cell, goal_cell)
 	var world_path: Array[Vector2] = []
 	for cell: Vector2i in cell_path:
+		world_path.append(_slice_world_from_cell(cell))
+	return world_path
+
+## Сколько клеток вокруг здания искать проходимую клетку для подхода (клетки зданий с зазором заняты).
+const BUG_TOWER_APPROACH_RADIUS: int = 4
+
+## Версия сетки (растёт при постройке и сносе зданий): жуки по ней узнают, что путь мог устареть.
+func _grid_version() -> int:
+	return grid.version
+
+## Путь жука к цели в координатах entities-local (той же рамке, что у path_points жука).
+## База: путь к клетке у базы. Здание: путь до ближайшей проходимой клетки рядом с ним, со стороны жука;
+## дальше жук идёт к зданию напрямую. Пустой массив значит «идти напрямую»: прямая видимость свободна,
+## либо пути нет (редкий случай, тогда жук идёт по прямой, как раньше).
+func _path_for_bug(from_global_position: Vector2, target_node: Node2D) -> Array[Vector2]:
+	var start_position: Vector2 = entities.to_local(from_global_position)
+	if not (target_node is GrayboxTower) or not is_instance_valid(target_node):
+		return _path_to_base(start_position)
+	var raw_start_cell: Vector2i = _cell_from_position(start_position)
+	var start_cell: Vector2i = Vector2i(
+		clampi(raw_start_cell.x, 0, MapGrid.WIDTH - 1),
+		clampi(raw_start_cell.y, 0, MapGrid.HEIGHT - 1)
+	)
+	var target_cell: Vector2i = _cell_from_position(entities.to_local(target_node.global_position))
+	var goal_cell: Vector2i = navigation.nearest_walkable_cell(target_cell, BUG_TOWER_APPROACH_RADIUS, start_cell)
+	var world_path: Array[Vector2] = []
+	if goal_cell == Vector2i(-1, -1):
+		return world_path
+	if navigation.has_line_of_sight(start_cell, goal_cell):
+		return world_path
+	for cell: Vector2i in navigation.find_path(start_cell, goal_cell):
 		world_path.append(_slice_world_from_cell(cell))
 	return world_path
 

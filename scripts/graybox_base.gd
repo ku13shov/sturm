@@ -19,7 +19,7 @@ var shield_points: float = 0.0
 var invulnerability_until: float = 0.0
 
 ## Ширина и сдвиг вытоптанного пятна под базой, px.
-@export var ground_decal_width_px: float = 340.0
+@export var ground_decal_width_px: float = 375.0
 @export var ground_decal_offset := Vector2(6.0, 48.0)
 
 func _ready() -> void:
