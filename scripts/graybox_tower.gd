@@ -199,7 +199,9 @@ func _set_state(next_state: String) -> void:
 	elif next_state == GrayboxBuildingState.UPGRADED:
 		modulate = Color.WHITE if use_new_soldier_visual else Color(0.65, 0.9, 1.0, 1.0)
 
-func upgrade() -> bool:
+## animate_visual = false: вид нового уровня включается сразу, без собственной анимации появления
+## (используется, когда смену скрывает площадка модернизации).
+func upgrade(animate_visual: bool = true) -> bool:
 	if health <= 0.0 or upgrade_level >= max_upgrade_level:
 		return false
 	upgrade_level += 1
@@ -223,7 +225,7 @@ func upgrade() -> bool:
 	upgrade_accent.visible = not use_new_soldier_visual
 	_set_state(GrayboxBuildingState.UPGRADED)
 	if use_new_soldier_visual and is_instance_valid(new_soldier_visual) and new_soldier_visual.has_method("set_upgrade_level"):
-		new_soldier_visual.call("set_upgrade_level", upgrade_level, not _restoring)
+		new_soldier_visual.call("set_upgrade_level", upgrade_level, animate_visual and not _restoring)
 	return true
 
 func _find_target() -> GrayboxBug:

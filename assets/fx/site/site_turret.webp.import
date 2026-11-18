@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://yhylxhcxdg84"
-path="res://.godot/imported/ground_decals 1.webp-120da4a85835e31a6b00efa592df913d.ctex"
+uid="uid://cysev87jki7to"
+path="res://.godot/imported/site_turret.webp-8d4dc76728dd935567ce6c1c1ada5c75.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fx/ground_decals 1.webp"
-dest_files=["res://.godot/imported/ground_decals 1.webp-120da4a85835e31a6b00efa592df913d.ctex"]
+source_file="res://assets/fx/site/site_turret.webp"
+dest_files=["res://.godot/imported/site_turret.webp-8d4dc76728dd935567ce6c1c1ada5c75.ctex"]
 
 [params]
 

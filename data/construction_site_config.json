@@ -1,0 +1,68 @@
+{
+ "version": 2,
+ "units": "px спрайта базы 1254x1254; footprint (ромб основания) ширина 1010 px = ширина здания; scale узла = building_game_width_px / 1010",
+ "site": {
+  "footprint_center": [630, 790],
+  "footprint_rx_ry": [505, 250],
+  "footprint_width_px": 1010,
+  "building_width_by_footprint": {"1": 96, "2": 144, "3": 192},
+  "offset_game_px": {"1": [0, 10], "2": [0, 0], "3": [0, 0]}
+ },
+ "assets": {
+  "base": {"file": "site_base.webp", "topleft": [120, 260]},
+  "front": {"file": "site_front.webp", "topleft": [122, 455]},
+  "floor": {"file": "site_floor.webp", "topleft": [237, 566]},
+  "turret": {"file": "site_turret.webp"},
+  "boom": {"file": "site_boom.webp"},
+  "hook": {"file": "site_hook.webp"},
+  "tank": {"file": "site_tank.webp"},
+  "crate1": {"file": "site_crate1.webp"},
+  "crate2": {"file": "site_crate2.webp"}
+ },
+ "build": {
+  "fixed_s": {"intro": 0.5, "finale": 0.5},
+  "color": "#ff8a1f"
+ },
+ "upgrade": {
+  "fixed_s": {"intro": 0.4, "level": 0.65, "finale": 0.4},
+  "color": "#2bd3ee",
+  "effects": {"beam": false, "chase_lamps": false, "arcs": true, "beam_width_px": 300, "beam_height_px": 530, "chase_hz": 5},
+  "chevron_polygon": [[-150, 0], [0, -62], [150, 0], [150, 42], [0, -20], [-150, 42]],
+  "chevron_base_y": 215,
+  "chevron_step_y": 72
+ },
+ "layout": {
+  "floor_diamond": {"x": 630, "y": 765, "hw": 400, "hh": 200},
+  "lamp_domes": [[630, 300], [193, 489], [1068, 492], [633, 700]],
+  "lamp_glow_radius": 150,
+  "lamp_dome_px": 34,
+  "prop_scale": 0.8,
+  "turret_topleft": [353, 544],
+  "tank_topleft": [720, 440],
+  "crate1_topleft": [719, 594],
+  "crate2_topleft": [636, 517],
+  "turret_pin_px": [95, 52],
+  "boom_pivot_px": [37, 42],
+  "boom_tip_px": [357, 223],
+  "tip_point": [608, 444],
+  "weld_spots": [[560, 623], [683, 670], [784, 586]],
+  "hook_scale": 0.54,
+  "hook_cable_attach_offset": [0, 22],
+  "hook_cable_rows": {"tile_from": 8, "tile_height": 52, "block_from": 118, "sprite_size": [97, 316], "attach_x": 48},
+  "cable_base_px": 108,
+  "pop": {"from": 0.92, "to": 1.0},
+  "shadow_alpha": 0.38,
+  "bar_y": 1110,
+  "bar_width": 640
+ },
+ "fx": {
+  "luff_deg": 7.5,
+  "hoist_px": 41,
+  "sparks_count": 60,
+  "spark_size": 0.7,
+  "steam_per_s": 10,
+  "glow": 1.1,
+  "lamp_pulse_hz": 4,
+  "show_bar": true
+ }
+}

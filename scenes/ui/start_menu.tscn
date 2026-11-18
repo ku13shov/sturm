@@ -1,35 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dndxy53xlxn3a"]
 
-[ext_resource type="Script" path="res://scripts/start_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" path="res://assets/ui/start_menu/sky.webp" id="2_sky"]
-[ext_resource type="Texture2D" path="res://assets/ui/start_menu/ridge.webp" id="3_ridge"]
-[ext_resource type="Texture2D" path="res://assets/ui/start_menu/logo.webp" id="4_logo"]
-[ext_resource type="Texture2D" path="res://assets/map/mars_ground_1024.webp" id="5_ground"]
-[ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1.webp" id="6_base"]
-[ext_resource type="Texture2D" path="res://assets/sprites/buildings/central_base_l1_lights_overlay.png" id="7_lights"]
-
-[sub_resource type="Gradient" id="G_fade"]
-offsets = PackedFloat32Array(0, 0.4, 1)
-colors = PackedColorArray(0.1, 0.02, 0.01, 0, 0.06, 0.015, 0.01, 0.5, 0.03, 0.008, 0.005, 0.93)
-
-[sub_resource type="GradientTexture2D" id="T_fade"]
-gradient = SubResource("G_fade")
-width = 8
-height = 128
-fill_from = Vector2(0, 0)
-fill_to = Vector2(0, 1)
-
-[sub_resource type="Gradient" id="G_vignette"]
-offsets = PackedFloat32Array(0.6, 1)
-colors = PackedColorArray(0, 0, 0, 0, 0.02, 0.004, 0, 0.78)
-
-[sub_resource type="GradientTexture2D" id="T_vignette"]
-gradient = SubResource("G_vignette")
-width = 256
-height = 256
-fill = 1
-fill_from = Vector2(0.5, 0.46)
-fill_to = Vector2(1, 0.46)
+[ext_resource type="Script" uid="uid://b4ae7ea4uya1v" path="res://scripts/start_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://l7ldaj202r8i" path="res://assets/ui/start_menu/sky.webp" id="2_sky"]
+[ext_resource type="Texture2D" uid="uid://dixulauypfafa" path="res://assets/ui/start_menu/logo.webp" id="4_logo"]
 
 [sub_resource type="Gradient" id="G_soft"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -46,69 +19,17 @@ fill_to = Vector2(1, 0.5)
 offsets = PackedFloat32Array(0, 0.3, 1)
 colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0)
 
-[sub_resource type="StyleBoxFlat" id="BtnNormal"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.05, 0.03, 0.025, 0.78)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.62, 0.34, 0.15, 0.9)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
+[sub_resource type="Gradient" id="G_vignette"]
+offsets = PackedFloat32Array(0.6, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0.02, 0.004, 0, 0.78)
 
-[sub_resource type="StyleBoxFlat" id="BtnHover"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.16, 0.08, 0.04, 0.9)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.6, 0.25, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="BtnPressed"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.28, 0.12, 0.04, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.7, 0.3, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="BtnDisabled"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.04, 0.03, 0.03, 0.6)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.3, 0.22, 0.18, 0.6)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
+[sub_resource type="GradientTexture2D" id="T_vignette"]
+gradient = SubResource("G_vignette")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.46)
+fill_to = Vector2(1, 0.46)
 
 [sub_resource type="StyleBoxFlat" id="PrimaryNormal"]
 content_margin_left = 12.0
@@ -121,22 +42,6 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 0.65, 0.25, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.88, 0.4, 0.1, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.8, 0.45, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
@@ -158,9 +63,89 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
+[sub_resource type="StyleBoxFlat" id="PrimaryHover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.88, 0.4, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.8, 0.45, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
 [sub_resource type="StyleBoxEmpty" id="BtnFocus"]
 
-[node name="StartMenu" type="Control"]
+[sub_resource type="StyleBoxFlat" id="BtnNormal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.05, 0.03, 0.025, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.34, 0.15, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnPressed"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.28, 0.12, 0.04, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.7, 0.3, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnHover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.16, 0.08, 0.04, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.6, 0.25, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="BtnDisabled"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.03, 0.03, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.22, 0.18, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="StartMenu" type="Control" unique_id=1235000576]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -169,7 +154,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Back" type="ColorRect" parent="."]
+[node name="Back" type="ColorRect" parent="." unique_id=2109298404]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -179,14 +164,13 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.17, 0.03, 0.008, 1)
 
-[node name="World" type="Control" parent="."]
-layout_mode = 3
+[node name="World" type="Control" parent="." unique_id=1764494034]
 anchors_preset = 0
 offset_right = 432.0
 offset_bottom = 768.0
 mouse_filter = 2
 
-[node name="Sky" type="TextureRect" parent="World"]
+[node name="Sky" type="TextureRect" parent="World" unique_id=2086719486]
 layout_mode = 0
 offset_top = -110.0
 offset_right = 432.0
@@ -195,7 +179,7 @@ mouse_filter = 2
 texture = ExtResource("2_sky")
 expand_mode = 1
 
-[node name="SkyBottom" type="ColorRect" parent="World"]
+[node name="SkyBottom" type="ColorRect" parent="World" unique_id=942762596]
 layout_mode = 0
 offset_left = -1200.0
 offset_top = 657.0
@@ -204,9 +188,9 @@ offset_bottom = 1840.0
 mouse_filter = 2
 color = Color(0.11, 0.025, 0.009, 1)
 
-[node name="Diorama" type="Node2D" parent="World"]
+[node name="Diorama" type="Node2D" parent="World" unique_id=782464603]
 
-[node name="Dust" type="CPUParticles2D" parent="World"]
+[node name="Dust" type="CPUParticles2D" parent="World" unique_id=1247740513]
 position = Vector2(216, 500)
 amount = 40
 texture = SubResource("T_soft")
@@ -224,7 +208,7 @@ scale_amount_max = 1.6
 color = Color(0.55, 0.22, 0.12, 0.13)
 color_ramp = SubResource("G_dust_ramp")
 
-[node name="Vignette" type="TextureRect" parent="."]
+[node name="Vignette" type="TextureRect" parent="." unique_id=508205463]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -235,14 +219,13 @@ mouse_filter = 2
 texture = SubResource("T_vignette")
 expand_mode = 1
 
-[node name="Ui" type="Control" parent="."]
-layout_mode = 3
+[node name="Ui" type="Control" parent="." unique_id=565733217]
 anchors_preset = 0
 offset_right = 432.0
 offset_bottom = 768.0
 mouse_filter = 2
 
-[node name="Logo" type="TextureRect" parent="Ui"]
+[node name="Logo" type="TextureRect" parent="Ui" unique_id=781285884]
 layout_mode = 0
 offset_left = 26.0
 offset_top = 33.0
@@ -252,7 +235,7 @@ mouse_filter = 2
 texture = ExtResource("4_logo")
 expand_mode = 1
 
-[node name="RemakeLabel" type="Label" parent="Ui"]
+[node name="RemakeLabel" type="Label" parent="Ui" unique_id=731563614]
 layout_mode = 0
 offset_top = 198.0
 offset_right = 432.0
@@ -264,7 +247,7 @@ theme_override_font_sizes/font_size = 13
 text = "REMAKE OF THE 2007 GAME"
 horizontal_alignment = 1
 
-[node name="Tagline" type="Label" parent="Ui"]
+[node name="Tagline" type="Label" parent="Ui" unique_id=1036658479]
 layout_mode = 0
 offset_top = 220.0
 offset_right = 432.0
@@ -276,23 +259,23 @@ theme_override_font_sizes/font_size = 15
 text = "Удержи базу. Отрази все атаки."
 horizontal_alignment = 1
 
-[node name="NewGameButton" type="Button" parent="Ui"]
+[node name="NewGameButton" type="Button" parent="Ui" unique_id=711234670]
 layout_mode = 0
 offset_left = 46.0
 offset_top = 572.0
 offset_right = 386.0
 offset_bottom = 620.0
 theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.9, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.95, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("PrimaryNormal")
-theme_override_styles/hover = SubResource("PrimaryHover")
 theme_override_styles/pressed = SubResource("PrimaryPressed")
+theme_override_styles/hover = SubResource("PrimaryHover")
 theme_override_styles/focus = SubResource("BtnFocus")
 text = "НОВАЯ ИГРА"
 
-[node name="ContinueButton" type="Button" parent="Ui"]
+[node name="ContinueButton" type="Button" parent="Ui" unique_id=1434130668]
 layout_mode = 0
 offset_left = 46.0
 offset_top = 628.0
@@ -300,12 +283,12 @@ offset_right = 386.0
 offset_bottom = 686.0
 theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
 theme_override_styles/normal = SubResource("BtnNormal")
-theme_override_styles/hover = SubResource("BtnHover")
 theme_override_styles/pressed = SubResource("BtnPressed")
+theme_override_styles/hover = SubResource("BtnHover")
 theme_override_styles/disabled = SubResource("BtnDisabled")
 theme_override_styles/focus = SubResource("BtnFocus")
 
-[node name="Labels" type="VBoxContainer" parent="Ui/ContinueButton"]
+[node name="Labels" type="VBoxContainer" parent="Ui/ContinueButton" unique_id=2119900158]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -316,20 +299,20 @@ mouse_filter = 2
 theme_override_constants/separation = 0
 alignment = 1
 
-[node name="Main" type="Label" parent="Ui/ContinueButton/Labels"]
+[node name="Main" type="Label" parent="Ui/ContinueButton/Labels" unique_id=870646754]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 18
 text = "ПРОДОЛЖИТЬ"
 horizontal_alignment = 1
 
-[node name="Sub" type="Label" parent="Ui/ContinueButton/Labels"]
+[node name="Sub" type="Label" parent="Ui/ContinueButton/Labels" unique_id=1905034017]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.62, 0.45, 1)
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 
-[node name="HelpButton" type="Button" parent="Ui"]
+[node name="HelpButton" type="Button" parent="Ui" unique_id=75107239]
 layout_mode = 0
 offset_left = 46.0
 offset_top = 694.0
@@ -338,12 +321,12 @@ offset_bottom = 736.0
 theme_override_colors/font_color = Color(1, 0.9, 0.75, 1)
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("BtnNormal")
-theme_override_styles/hover = SubResource("BtnHover")
 theme_override_styles/pressed = SubResource("BtnPressed")
+theme_override_styles/hover = SubResource("BtnHover")
 theme_override_styles/focus = SubResource("BtnFocus")
 text = "СПРАВКА"
 
-[node name="VersionLabel" type="Label" parent="Ui"]
+[node name="VersionLabel" type="Label" parent="Ui" unique_id=1588907380]
 layout_mode = 0
 offset_left = 16.0
 offset_top = 744.0
@@ -352,6 +335,3 @@ offset_bottom = 764.0
 theme_override_colors/font_color = Color(0.85, 0.6, 0.42, 0.7)
 theme_override_font_sizes/font_size = 11
 horizontal_alignment = 2
-
-
-

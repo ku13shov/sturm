@@ -29,10 +29,6 @@ const NAVIGATION_SYSTEM_TYPE = preload("res://map/navigation_system.gd")
 const SAVE_PATH: String = "user://sturmtrupp_survival_save.json"
 const SAVE_TEMP_PATH: String = "user://sturmtrupp_survival_save.tmp"
 const SAVE_BACKUP_PATH: String = "user://sturmtrupp_survival_save.bak"
-const SMALL_CONSTRUCTION_TEXTURE: Texture2D = preload("res://original/145.png")
-const LARGE_CONSTRUCTION_TEXTURE: Texture2D = preload("res://original/146.png")
-const SMALL_PAD_TEXTURE: Texture2D = preload("res://original/147.png")
-const LARGE_PAD_TEXTURE: Texture2D = preload("res://original/148.png")
 const SMALL_CONSTRUCTION_TIME: float = 2.0
 const LARGE_CONSTRUCTION_TIME: float = 3.0
 const END_SCREEN_SCENE: PackedScene = preload("res://scenes/ui/end_screen.tscn")
@@ -1179,40 +1175,30 @@ func _start_construction(tower: GrayboxTower, is_upgrade: bool = false) -> void:
 	var large_building: bool = tower.building_id == ENERGY_STATION_ID
 	tower.combat_enabled = false
 	repair_states.erase(tower)
-	var construction_visual: Sprite2D = Sprite2D.new()
-	construction_visual.texture = LARGE_CONSTRUCTION_TEXTURE if large_building else SMALL_CONSTRUCTION_TEXTURE
-	construction_visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	construction_visual.z_index = 4
-	construction_visual.scale = Vector2(2.0, 2.0)
-	tower.add_child(construction_visual)
-	var pad_visual: Sprite2D = Sprite2D.new()
-	pad_visual.texture = LARGE_PAD_TEXTURE if large_building else SMALL_PAD_TEXTURE
-	pad_visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	pad_visual.z_index = 0
-	pad_visual.scale = Vector2(2.0, 2.0)
-	pad_visual.visible = not bool(tower.get("use_new_soldier_visual"))
-	tower.add_child(pad_visual)
-	var progress_bar: ProgressBar = ProgressBar.new()
-	progress_bar.position = Vector2(-32.0, 38.0)
-	progress_bar.size = Vector2(64.0, 7.0)
-	progress_bar.max_value = 1.0
-	progress_bar.value = 0.0
-	progress_bar.show_percentage = false
-	progress_bar.z_index = 6
-	tower.add_child(progress_bar)
 	var original_visibility: Dictionary = {}
 	for child: Node in tower.get_children():
-		if child != construction_visual and child != pad_visual and child != progress_bar and not child is GroundDecal:
-			if child is CanvasItem:
-				original_visibility[child.name] = (child as CanvasItem).visible
-				(child as CanvasItem).visible = false
+		if not child is GroundDecal and child is CanvasItem:
+			original_visibility[child.name] = (child as CanvasItem).visible
+			(child as CanvasItem).visible = false
 	var profile: Dictionary = BUILDING_REGISTRY.profile(tower.building_id)
 	var default_duration: float = LARGE_CONSTRUCTION_TIME if large_building else SMALL_CONSTRUCTION_TIME
 	var duration_key: String = "upgrade_time" if is_upgrade else "construction_time"
 	var duration: float = float(profile.get(duration_key, default_duration))
 	if not is_upgrade and is_instance_valid(tower.ground_decal):
 		tower.ground_decal.appear(duration)
-	construction_states[tower] = {"elapsed": 0.0, "duration": duration, "visual": construction_visual, "pad": pad_visual, "progress": progress_bar, "original_visibility": original_visibility, "is_upgrade": is_upgrade}
+	# Новая площадка (студия v2): для постройки и модернизации, если конфиг и арт на месте.
+	var site: ConstructionSiteV2 = null
+	var fade_nodes: Array[CanvasItem] = []
+	var fade_base: Dictionary = {}
+	if ConstructionSiteV2.is_available():
+		site = ConstructionSiteV2.new()
+		tower.add_child(site)
+		site.setup(BUILDING_REGISTRY.footprint(tower.building_id).x, duration, is_upgrade, tower.upgrade_level + 2)
+		for child: Node in tower.get_children():
+			if child is CanvasItem and original_visibility.has(child.name) and child != tower.range_indicator:
+				fade_nodes.append(child as CanvasItem)
+				fade_base[child] = (child as CanvasItem).modulate
+	construction_states[tower] = {"elapsed": 0.0, "duration": duration, "original_visibility": original_visibility, "is_upgrade": is_upgrade, "site": site, "fade_nodes": fade_nodes, "fade_base": fade_base}
 	_update_hud("Модернизация началась" if is_upgrade else "Строительство началось")
 
 func _process_repairs(delta: float) -> void:
@@ -1261,23 +1247,47 @@ func _process_construction(delta: float) -> void:
 		var state: Dictionary = construction_states[tower]
 		state["elapsed"] = float(state["elapsed"]) + delta
 		var progress: float = clampf(float(state["elapsed"]) / float(state["duration"]), 0.0, 1.0)
-		var progress_bar: ProgressBar = state["progress"] as ProgressBar
-		progress_bar.value = progress
+		var site_node: ConstructionSiteV2 = state.get("site") as ConstructionSiteV2
+		if is_instance_valid(site_node):
+			var grow: float = site_node.set_progress(progress)
+			var fade_base: Dictionary = state["fade_base"] as Dictionary
+			var original_visibility_now: Dictionary = state["original_visibility"] as Dictionary
+			for fade_node: CanvasItem in state["fade_nodes"] as Array[CanvasItem]:
+				if is_instance_valid(fade_node):
+					var base_color: Color = fade_base.get(fade_node, Color.WHITE)
+					fade_node.visible = grow > 0.01 and bool(original_visibility_now.get(fade_node.name, true))
+					fade_node.modulate = Color(base_color.r, base_color.g, base_color.b, base_color.a * grow)
+			# Модернизация: в самом начале финала площадки (старый вид ещё полностью скрыт) переключаем уровень
+			# С собственной анимацией здания (падение бункера, барьеры). Старый вид не мигает: он уже заменён
+			# новым до того, как здание начинает проявляться.
+			if bool(state.get("is_upgrade", false)) and not bool(state.get("upgraded", false)) and site_node.in_finale() and grow <= 0.3:
+				state["upgraded"] = true
+				var visible_before: Dictionary = {}
+				for hidden_node: CanvasItem in state["fade_nodes"] as Array[CanvasItem]:
+					if is_instance_valid(hidden_node):
+						visible_before[hidden_node] = hidden_node.visible
+				tower.upgrade(true)
+				# Узлы, которые upgrade() сделал видимыми (например, акцент у обычных башен), должны остаться видимыми после стройки.
+				for changed_node: CanvasItem in state["fade_nodes"] as Array[CanvasItem]:
+					if is_instance_valid(changed_node) and changed_node.visible != bool(visible_before.get(changed_node, changed_node.visible)):
+						original_visibility_now[changed_node.name] = changed_node.visible
 		if progress >= 1.0:
-			var construction_visual: Node = state["visual"] as Node
-			var pad_visual: Node = state["pad"] as Node
-			var progress_node: Node = state["progress"] as Node
-			construction_visual.queue_free()
-			progress_node.queue_free()
+			if is_instance_valid(site_node):
+				var fade_base_done: Dictionary = state["fade_base"] as Dictionary
+				for fade_node_done: CanvasItem in state["fade_nodes"] as Array[CanvasItem]:
+					if is_instance_valid(fade_node_done):
+						fade_node_done.modulate = fade_base_done.get(fade_node_done, Color.WHITE)
+				site_node.finish()
 			var original_visibility: Dictionary = state["original_visibility"] as Dictionary
 			for child: Node in tower.get_children():
-				if child != pad_visual and child != construction_visual and child != progress_node and child != tower.range_indicator and not child is GroundDecal and child is CanvasItem:
+				if child != tower.range_indicator and child != site_node and not child is GroundDecal and child is CanvasItem:
 					(child as CanvasItem).visible = bool(original_visibility.get(child.name, true))
 			# Радиус атаки не восстанавливаем из снимка видимости: им управляет только выбор здания (_sync_range_display).
 			tower.set_range_visible(false)
 			var is_upgrade: bool = bool(state.get("is_upgrade", false))
-			if is_upgrade:
-				tower.upgrade()
+			# Если площадка уже переключила уровень в момент, когда здание было скрыто, повторно не вызываем.
+			if is_upgrade and not bool(state.get("upgraded", false)):
+				tower.upgrade(true)
 			tower.combat_enabled = true
 			completed.append(tower)
 	for tower: GrayboxTower in completed:
